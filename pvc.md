@@ -1,6 +1,7 @@
-# Utilisation
+# Notice d’utilisation
 
-Ce projet dépend des bibliothèques numpy et flask pour l'application web.
+Ce projet dépend des bibliothèques numpy et ...
+Il dépend aussi de flask pour l'application web.
 
 ```bash
 pip install numpy # (tout)
@@ -115,4 +116,10 @@ pip install requirement.txt
 - <u>Fin Pour</u>
 - <u>Renvoyer</u> $Q_i, Q_j$
 
-  <u>Fin</u>
+<u>Fin</u>
+
+## Point le Plus Proche Optimisé (OptPPP)
+
+## Arbre couvrant de poids minimum (OptPrim)
+
+## évalutation et séparation progressive (“brunch and bound”) (HDS)

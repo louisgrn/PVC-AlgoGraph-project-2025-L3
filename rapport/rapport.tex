@@ -1,0 +1,211 @@
+\documentclass[a4paper, 12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage{lmodern}
+\usepackage{graphicx, float}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{listings}
+\usepackage[listings,skins]{tcolorbox}
+\usepackage{xcolor}
+
+\usepackage[hyphens]{url}
+\usepackage[pdfauthor = {{Tristan Groult, Louis Guerain, Kibandou Bignang}}, pdftitle = {{Rapport projet Algorithmique des graphes}},pdfstartview = Fit, pdfpagelayout =
+SinglePage, pdfnewwindow = true, bookmarksnumbered =
+true, breaklinks, colorlinks, linkcolor = red, urlcolor =
+black, citecolor = cyan, linktoc = all]{hyperref}
+
+\usepackage[a4paper,margin=2.5cm]{geometry}
+
+\renewcommand{\familydefault}{\sfdefault}
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{codeblue}{rgb}{0.0, 0.4, 0.8}
+\definecolor{darkWhite}{rgb}{0.90,0.90,0.90}
+
+% Configuration pour les blocs de code (bash, python, etc.)
+\lstdefinestyle{bigCode}{
+    backgroundcolor=\color{darkWhite},
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{codeblue},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,
+    breaklines=true,
+    captionpos=b,
+    keepspaces=true,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=2,
+    language=bash,
+    morekeywords={pip, install}
+}
+
+\lstset{style=bigCode}
+
+\NewTotalTCBox{\commandbox}{ s v }
+{verbatim,colupper=black,colback=darkWhite!75!white,colframe=white,left=0pt,boxsep=0px,right=0pt,top=2px,bottom=2px}
+{\IfBooleanT{#1}{\textcolor{red}{\ttfamily\bfseries > }}%
+\lstinline[language=bash,keywordstyle=\color{codeblue}\bfseries]^#2^}
+
+\newcommand{\code}{\commandbox}
+
+\title{Rapport projet d'Algorithmie des graphes \\ \large Résolution du problème du voyageur de commerce}
+\author{Tristan GROULT, Louis GUERAIN, Kibandou BIGNANG}
+\date{\today}
+
+\begin{document}
+
+\begin{figure}[t]
+  \centering
+  \begin{minipage}{0.3\textwidth}
+    \centering
+    \IfFileExists{logo_univ.png}{%
+      \includegraphics[width=1\textwidth]{logo_univ.png}%
+    }{%
+      \fbox{\parbox[b][3cm][c]{\linewidth}{\centering logo\_univ.png manquant}}%
+    }
+  \end{minipage}
+  \hfill
+  \begin{minipage}{0.3\textwidth}
+    \centering
+    \IfFileExists{ufr_logo.png}{%
+      \includegraphics[width=1\textwidth]{ufr_logo.png}%
+    }{%
+      \fbox{\parbox[b][3cm][c]{\linewidth}{\centering ufr\_logo.png manquant}}%
+    }
+  \end{minipage}
+\end{figure}
+
+\maketitle
+
+\clearpage\setcounter{page}{2}
+
+{
+\hypersetup{hidelinks} % Sommaire en "noir"
+\renewcommand{\contentsname}{Sommaire}
+\tableofcontents % Affichage du sommaire
+}
+
+\clearpage
+
+\section{Notice d'utilisation}
+
+Ce projet dépend des bibliothèques \texttt{numpy} et d'autres modules standards.
+Il dépend aussi de \texttt{flask} pour l'application web.
+
+\begin{lstlisting}[caption=Installation des dépendances]
+pip install numpy # (tout)
+pip install flask # (web app)
+\end{lstlisting}
+
+Ou plus simplement :
+
+\begin{lstlisting}
+pip install requirement.txt
+\end{lstlisting}
+
+\section{Algorithme}
+
+\subsection{Point le Plus Proche (PPP)}
+
+\begin{tcolorbox}[colback=darkWhite!75!white,colframe=black!30,left=5pt,right=5pt,top=5pt,bottom=5pt]
+\textbf{Algorithme : Procédure PPP (Point le Plus Proche)} \\
+\textbf{Description :} Construit un cycle hamiltonien en insérant itérativement le point le plus proche du cycle actuel. \\
+\textbf{Entrées :}
+\begin{itemize}
+    \item $L$ : Liste de points $P_1, \dots, P_n$
+    \item $Q$ : Un point de départ choisi dans $L$
+    \item $D$ : La matrice des distances $n \times n$
+\end{itemize}
+\textbf{Sorties :}
+\begin{itemize}
+    \item $c$ : Un cycle hamiltonien
+    \item $l$ : La longueur du cycle
+\end{itemize}
+\textbf{Début :}
+\begin{enumerate}
+    \item $c \leftarrow$ cycle trivial composé du seul point $Q$
+    \item $l \leftarrow 0$
+    \item Retirer $Q$ de $L$
+    \item Tant que $L$ n'est pas vide faire :
+    \item \quad $(Q_i, Q_j) \leftarrow \texttt{TrouverCoupleMin}(L, c, D)$
+    \item \quad $(c, l) \leftarrow \texttt{InsérerDansCycle}(c, Q_i, Q_j, D, l)$
+    \item \quad Retirer $Q_i$ de $L$
+    \item Retourner $c, l$
+\end{enumerate}
+\end{tcolorbox}
+
+\vspace{5mm}
+
+\begin{tcolorbox}[colback=darkWhite!75!white,colframe=black!30,left=5pt,right=5pt,top=5pt,bottom=5pt]
+\textbf{Algorithme : InsérerDansCycle} \\
+\textbf{Description :} Insère $Q_i$ dans $c$ soit entre $Q_j$ et son successeur, soit entre son prédécesseur et $Q_j$, selon le coût minimal, et met à jour la longueur du cycle. \\
+\textbf{Entrées :}
+\begin{itemize}
+    \item $c$ : Cycle partiel
+    \item $Q_i$ : Point à insérer
+    \item $Q_j$ : Point d'ancrage dans $c$
+    \item $D$ : Matrice des distances
+    \item $l$ : Longueur actuelle du cycle
+\end{itemize}
+\textbf{Sorties :} $c$ (cycle mis à jour), $l$ (nouvelle longueur) \\
+\textbf{Début :}
+\begin{enumerate}
+    \item Soit $Q_{next}$ le successeur de $Q_j$ dans $c$
+    \item Soit $Q_{prev}$ le prédécesseur de $Q_j$ dans $c$
+    \item $\text{coût}_{\text{droite}} \leftarrow D[Q_j, Q_i] + D[Q_i, Q_{next}] - D[Q_j, Q_{next}]$
+    \item $\text{coût}_{\text{gauche}} \leftarrow D[Q_{prev}, Q_i] + D[Q_i, Q_j] - D[Q_{prev}, Q_j]$
+    \item Si $\text{coût}_{\text{droite}} \leq \text{coût}_{\text{gauche}}$ alors :
+    \item \quad Insérer $Q_i$ entre $Q_j$ et $Q_{next}$ dans $c$
+    \item \quad $l \leftarrow l + \text{coût}_{\text{droite}}$
+    \item Sinon :
+    \item \quad Insérer $Q_i$ entre $Q_{prev}$ et $Q_j$ dans $c$
+    \item \quad $l \leftarrow l + \text{coût}_{\text{gauche}}$
+    \item Retourner $c, l$
+\end{enumerate}
+\end{tcolorbox}
+
+\vspace{5mm}
+
+\begin{tcolorbox}[colback=darkWhite!75!white,colframe=black!30,left=5pt,right=5pt,top=5pt,bottom=5pt]
+\textbf{Algorithme : TrouverCoupleMin} \\
+\textbf{Description :} Trouve le couple $(Q_i, Q_j)$ tel que $Q_i \in L$, $Q_j \in c$ et la distance $D[Q_i, Q_j]$ est minimale. \\
+\textbf{Entrées :}
+\begin{itemize}
+    \item $L$ : Liste des points non encore visités
+    \item $c$ : Le cycle partiel actuel
+    \item $D$ : La matrice des distances $n \times n$
+\end{itemize}
+\textbf{Sorties :} $Q_i$ (point sélectionné dans $L$), $Q_j$ (point d'ancrage dans $c$) \\
+\textbf{Début :}
+\begin{enumerate}
+    \item $d_{min} \leftarrow \infty$
+    \item $Q_i \leftarrow \text{vide}$
+    \item $Q_j \leftarrow \text{vide}$
+    \item Pour chaque point $u$ appartenant à $L$ faire :
+    \item \quad Pour chaque point $v$ appartenant à $c$ faire :
+    \item \quad \quad Si $D[u, v] < d_{min}$ alors :
+    \item \quad \quad \quad $d_{min} \leftarrow D[u, v]$
+    \item \quad \quad \quad $Q_i \leftarrow u$
+    \item \quad \quad \quad $Q_j \leftarrow v$
+    \item Retourner $Q_i, Q_j$
+\end{enumerate}
+\end{tcolorbox}
+
+\subsection{Point le Plus Proche Optimisé (OptPPP)}
+
+\textit{Section à compléter.}
+
+\subsection{Arbre couvrant de poids minimum (OptPrim)}
+
+\textit{Section à compléter.}
+
+\subsection{Évaluation et séparation progressive ("branch and bound") (HDS)}
+
+\textit{Section à compléter.}
+
+\end{document}

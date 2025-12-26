@@ -1,3 +1,13 @@
 doc/
 *.txt
 __pycache__/
+
+# latex
+*.aux
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.gz
+*.synctex
+*.toc
