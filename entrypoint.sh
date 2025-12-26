@@ -23,6 +23,7 @@ export FLASK_APP=app.py
 # Use python -m flask to ensure we use the installed module
 
 curl -H "Content-Type: application/json" -d '{"content": "✅ Server is started !"}' "$WEBHOOK_URL"
+curl -H "Content-Type: application/json" -d '{"content": "--------------------------------------"}' "$WEBHOOK_URL"
 
 
 python3 -m flask run --host=0.0.0.0
