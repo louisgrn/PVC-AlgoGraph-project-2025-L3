@@ -1,11 +1,9 @@
 name: Build and Publish Image
 
-# This triggers the action when you push to the 'main' branch
 on:
   push:
     branches: ["main"]
 
-# This grants the action permission to upload to the registry
 permissions:
   contents: read
   packages: write
@@ -24,12 +22,15 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # --- NEW STEP: Convert name to lowercase ---
+      - name: Lowercase Repo Name
+        run: |
+          echo "IMAGE_NAME=${GITHUB_REPOSITORY,,}" >>${GITHUB_ENV}
+
       - name: Build and push Docker image
         uses: docker/build-push-action@v4
         with:
           context: .
           push: true
-          # IMPORTANT: This constructs the image URL automatically using your repo name
-          # It converts everything to lowercase because Docker requires it
-          tags: |
-            ghcr.io/${{ github.repository }}:latest
+          # Use the new lowercase variable ${{ env.IMAGE_NAME }}
+          tags: ghcr.io/${{ env.IMAGE_NAME }}:latest
