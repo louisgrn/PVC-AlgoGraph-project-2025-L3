@@ -1,0 +1,35 @@
+name: Build and Publish Image
+
+# This triggers the action when you push to the 'main' branch
+on:
+  push:
+    branches: ["main"]
+
+# This grants the action permission to upload to the registry
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          # IMPORTANT: This constructs the image URL automatically using your repo name
+          # It converts everything to lowercase because Docker requires it
+          tags: |
+            ghcr.io/${{ github.repository }}:latest
