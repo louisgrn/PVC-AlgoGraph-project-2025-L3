@@ -82,3 +82,88 @@ def calculer_matrice_distances(points):
                 D[i, j] = 0.0
 
     return D
+
+
+#%% Point le Plus Proche (PPP) :
+
+def trouver_couple_min(L, c, D):
+    """
+    Trouve le couple (Q_i, Q_j) tel que Q_i in L, Q_j in c et D[Q_i, Q_j] est minimale.
+    Args:
+        L (list): Liste des indices des points non encore visités
+        c (list): Liste des indices du cycle partiel actuel
+        D (np.ndarray): Matrice des distances n x n
+    Returns:
+        tuple: (Q_i, Q_j) indices
+    """
+    d_min = float('inf')
+    Q_i = None
+    Q_j = None
+    for u in L:
+        for v in c:
+            if D[u, v] < d_min:
+                d_min = D[u, v]
+                Q_i = u
+                Q_j = v
+    return Q_i, Q_j
+
+def inserer_dans_cycle(c, Q_i, Q_j, D, l):
+    """
+    Insère Q_i dans c entre Q_j et son point adjacent, met à jour la longueur du cycle.
+    Args:
+        c (list): Liste des indices du cycle partiel
+        Q_i (int): Indice du point à insérer
+        Q_j (int): Indice du point d'ancrage dans c
+        D (np.ndarray): Matrice des distances
+        l (float): Longueur actuelle du cycle
+    Returns:
+        tuple: (c, l) cycle mis à jour et nouvelle longueur
+    """
+    n = len(c)
+    idx_j = c.index(Q_j)
+    
+    # Insertion entre Q_j et le suivant (j+1)
+    idx_next = (idx_j + 1) % n
+    Q_next = c[idx_next]
+    cout_droite = D[Q_j, Q_i] + D[Q_i, Q_next] - D[Q_j, Q_next]
+    
+    # Insertion entre le précédent (j-1) et Q_j
+    idx_prev = (idx_j - 1) % n
+    Q_prev = c[idx_prev]
+    cout_gauche = D[Q_prev, Q_i] + D[Q_i, Q_j] - D[Q_prev, Q_j]
+    
+    # Choix du meilleur
+    if cout_droite <= cout_gauche:
+        c.insert(idx_j + 1, Q_i)
+        l += cout_droite
+    else:
+        c.insert(idx_j, Q_i)
+        l += cout_gauche
+
+    return c, l
+
+def ppp(points, Q=None, D=None):
+    """
+    Procédure PPP : construit un cycle hamiltonien en insérant itérativement le point le plus proche du cycle actuel.
+    Args:
+        points (list): Liste de tuples (x, y)
+        Q (int, optional): Indice du point de départ. Si None, prend 0.
+        D (np.ndarray, optional): Matrice des distances. Si None, la calcule.
+    Returns:
+        tuple: (c, l) cycle hamiltonien (liste d'indices), longueur du cycle
+    """
+    n = len(points)
+    if D is None:
+        D = calculer_matrice_distances(points)
+    if Q is None:
+        Q = 0
+    L = list(range(n))
+    c = [Q]
+    l = 0.0
+    L.remove(Q)
+    while L != []:
+        Q_i, Q_j = trouver_couple_min(L, c, D)
+        c, l = inserer_dans_cycle(c, Q_i, Q_j, D, l)
+        L.remove(Q_i)
+    return c, l
+
