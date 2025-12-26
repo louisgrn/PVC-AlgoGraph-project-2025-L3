@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row g-4">
+    <div class="col-lg-5">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-file-upload me-2"></i>Charger des Données</h5>
+            </div>
+            <div class="card-body">
+                <form action="/upload" method="post" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="file" class="form-label">Sélectionner un fichier .txt</label>
+                        <input class="form-control" type="file" id="file" name="file">
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Téléverser</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-plus-circle me-2"></i>Ajouter un Point</h5>
+            </div>
+            <div class="card-body">
+                <form action="/add_point" method="post">
+                    <div class="input-group">
+                        <span class="input-group-text">X</span>
+                        <input type="number" step="any" class="form-control" name="x" placeholder="0.0" required>
+                        <span class="input-group-text">Y</span>
+                        <input type="number" step="any" class="form-control" name="y" placeholder="0.0" required>
+                        <button type="submit" class="btn btn-success">Ajouter</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0"><i class="fas fa-random me-2"></i>Générer Aléatoirement</h5>
+            </div>
+            <div class="card-body">
+                <form action="/generate" method="post">
+                     <div class="input-group">
+                        <input type="number" class="form-control" name="n" placeholder="Nombre de points" required>
+                        <button type="submit" class="btn btn-warning">Générer</button>
+                     </div>
+                </form>
+            </div>
+        </div>
+
+        <form action="/clear" method="post">
+            <button type="submit" class="btn btn-outline-danger w-100"><i class="fas fa-trash me-2"></i>Effacer Tous les Points</button>
+        </form>
+    </div>
+    
+    <div class="col-lg-7">
+        <div class="card shadow-sm h-100">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-map me-2"></i>Visualisation</h5>
+            </div>
+            <div class="card-body p-0">
+                <div id="graph" style="width: 100%; height: 600px;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var points = {{ points | tojson }};
+    var x = points.map(p => p[0]);
+    var y = points.map(p => p[1]);
+
+    var trace = {
+        x: x,
+        y: y,
+        mode: 'markers',
+        type: 'scatter',
+        marker: { size: 12, color: '#0d6efd' }
+    };
+
+    function getLayout(theme) {
+        const isDark = theme === 'dark';
+        const bgColor = isDark ? '#2b3035' : '#ffffff';
+        const textColor = isDark ? '#f8f9fa' : '#212529';
+        const gridColor = isDark ? '#495057' : '#e9ecef';
+
+        return {
+            title: { text: 'Distribution des Points', font: { color: textColor } },
+            paper_bgcolor: bgColor,
+            plot_bgcolor: bgColor,
+            xaxis: { 
+                range: [0, 1], 
+                gridcolor: gridColor,
+                zerolinecolor: gridColor,
+                tickfont: { color: textColor }
+            },
+            yaxis: { 
+                range: [0, 1],
+                gridcolor: gridColor,
+                zerolinecolor: gridColor,
+                tickfont: { color: textColor }
+            },
+            margin: { t: 40, r: 20, b: 40, l: 40 }
+        };
+    }
+
+    const currentTheme = document.documentElement.getAttribute('data-bs-theme');
+    Plotly.newPlot('graph', [trace], getLayout(currentTheme), {responsive: true});
+
+    window.addEventListener('themeChanged', () => {
+        const newTheme = document.documentElement.getAttribute('data-bs-theme');
+        Plotly.react('graph', [trace], getLayout(newTheme), {responsive: true});
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row g-4">
+    <div class="col-lg-4">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-cogs me-2"></i>Configuration</h5>
+            </div>
+            <div class="card-body">
+                <form id="solveForm">
+                    <h6 class="mb-3">Sélectionner les Algorithmes</h6>
+                    <div class="list-group mb-3">
+                        {% for algo in algos %}
+                        <label class="list-group-item">
+                            <input class="form-check-input me-1" type="checkbox" value="{{ algo.id }}" id="algo_{{ algo.id }}" name="algos">
+                            {{ algo.name }}
+                        </label>
+                        {% endfor %}
+                    </div>
+                    <button type="button" onclick="solve()" class="btn btn-primary w-100">
+                        <i class="fas fa-play me-2"></i>Lancer la Sélection
+                    </button>
+                </form>
+            </div>
+        </div>
+        <div id="results"></div>
+    </div>
+    
+    <div class="col-lg-8">
+        <div class="card shadow-sm h-100">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-map-marked-alt me-2"></i>Visualisation de la Solution</h5>
+            </div>
+            <div class="card-body p-0">
+                <div id="graph" style="width: 100%; height: 600px;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var points = {{ points | tojson }};
+    var currentRoutes = [];
+    
+    function getLayout(theme) {
+        const isDark = theme === 'dark';
+        const bgColor = isDark ? '#2b3035' : '#ffffff';
+        const textColor = isDark ? '#f8f9fa' : '#212529';
+        const gridColor = isDark ? '#495057' : '#e9ecef';
+
+        return {
+            title: { text: 'Solution PVC', font: { color: textColor } },
+            paper_bgcolor: bgColor,
+            plot_bgcolor: bgColor,
+            xaxis: { 
+                range: [0, 1], 
+                gridcolor: gridColor,
+                zerolinecolor: gridColor,
+                tickfont: { color: textColor }
+            },
+            yaxis: { 
+                range: [0, 1],
+                gridcolor: gridColor,
+                zerolinecolor: gridColor,
+                tickfont: { color: textColor }
+            },
+            margin: { t: 40, r: 20, b: 40, l: 40 },
+            legend: { font: { color: textColor } }
+        };
+    }
+
+    function plotGraph(routes = []) {
+        currentRoutes = routes;
+        var x = points.map(p => p[0]);
+        var y = points.map(p => p[1]);
+        
+        const currentTheme = document.documentElement.getAttribute('data-bs-theme');
+        const isDark = currentTheme === 'dark';
+        const pointColor = isDark ? '#adb5bd' : '#000000';
+
+        var data = [{
+            x: x,
+            y: y,
+            mode: 'markers+text',
+            type: 'scatter',
+            text: points.map((_, i) => i),
+            textposition: 'top center',
+            marker: { size: 10, color: pointColor },
+            textfont: { color: pointColor },
+            name: 'Points'
+        }];
+
+        routes.forEach((route, index) => {
+            var rx = route.path.map(i => points[i][0]);
+            var ry = route.path.map(i => points[i][1]);
+            // Close the loop
+            rx.push(points[route.path[0]][0]);
+            ry.push(points[route.path[0]][1]);
+
+            data.push({
+                x: rx,
+                y: ry,
+                mode: 'lines',
+                type: 'scatter',
+                name: route.algo + ' (Long: ' + route.length.toFixed(2) + ')'
+            });
+        });
+
+        Plotly.newPlot('graph', data, getLayout(currentTheme), {responsive: true});
+    }
+
+    plotGraph();
+
+    window.addEventListener('themeChanged', () => {
+        plotGraph(currentRoutes);
+    });
+
+    function solve() {
+        var selected = [];
+        document.querySelectorAll('input[name="algos"]:checked').forEach(el => selected.push(el.value));
+        
+        // Show loading state
+        const btn = document.querySelector('button[onclick="solve()"]');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Exécution...';
+        btn.disabled = true;
+
+        fetch('/run_solve', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({algos: selected})
+        })
+        .then(response => response.json())
+        .then(data => {
+            plotGraph(data.results);
+            var resDiv = document.getElementById('results');
+            resDiv.innerHTML = '<h5 class="mb-3">Résultats</h5>';
+            data.results.forEach(r => {
+                resDiv.innerHTML += `<div class="card mb-2 shadow-sm">
+                    <div class="card-body">
+                        <h6 class="card-title text-primary">${r.algo}</h6>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="badge bg-info text-dark">Longueur: ${r.length.toFixed(4)}</span>
+                            <span class="badge bg-secondary">Temps: ${r.time.toFixed(4)}s</span>
+                        </div>
+                        <details>
+                            <summary class="text-muted small cursor-pointer">Voir le Chemin (Indices)</summary>
+                            <p class="text-break mt-2 p-2 bg-body-tertiary rounded font-monospace small">${JSON.stringify(r.path)}</p>
+                        </details>
+                    </div>
+                </div>`;
+            });
+        })
+        .finally(() => {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        });
+    }
+</script>
+{% endblock %}
