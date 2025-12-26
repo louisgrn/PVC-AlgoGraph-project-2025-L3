@@ -1,14 +1,8 @@
 FROM python:3.9-slim
 
 # Install system dependencies
-# texlive-latex-base: Basic LaTeX support
-# texlive-latex-extra: Additional LaTeX packages (often needed)
 # curl: For sending webhooks
 RUN apt-get update && apt-get install -y \
-    texlive-latex-base \
-    texlive-latex-extra \
-    texlive-lang-french \
-    texlive-pictures \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
