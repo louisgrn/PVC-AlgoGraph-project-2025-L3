@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card shadow-sm">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="fas fa-file-pdf me-2"></i>Rapport du Projet</h5>
+        <a href="{{ url_for('rapport_pdf') }}" class="btn btn-light btn-sm" download>
+            <i class="fas fa-download me-1"></i>Télécharger
+        </a>
+    </div>
+    <div class="card-body p-0">
+        <div class="ratio ratio-16x9" style="height: 80vh;">
+            <iframe src="{{ url_for('rapport_pdf') }}" title="Rapport PDF" allowfullscreen></iframe>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, redirect, url_for
+from flask import Flask, render_template, request, jsonify, redirect, url_for, send_from_directory
 import pvc_lib
 import threading
 import time
@@ -115,6 +115,14 @@ def run_solve():
 @app.route('/stats')
 def stats():
     return render_template('stats.html')
+
+@app.route('/rapport')
+def rapport():
+    return render_template('rapport.html')
+
+@app.route('/rapport/pdf')
+def rapport_pdf():
+    return send_from_directory('rapport', 'rapport.pdf')
 
 if __name__ == '__main__':
     app.run(debug=True)
