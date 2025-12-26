@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, jsonify, redirect, url_for
-import pvc
+import pvc_lib
 import threading
 import time
 import json
@@ -17,7 +17,7 @@ ALGORITHMS = [
     {
         "id": "ppp",
         "name": "Point le Plus Proche (PPP)",
-        "func": pvc.ppp
+        "func": pvc_lib.ppp
     }
     # Add more algorithms here
 ]
@@ -37,7 +37,7 @@ def upload():
         try:
             file.save(path)
             # Use the existing function from pvc.py
-            POINTS = pvc.lire_points_fichier(path)
+            POINTS = pvc_lib.lire_points_fichier(path)
         finally:
             # Clean up the temporary file
             if os.path.exists(path):
@@ -60,7 +60,7 @@ def generate():
     global POINTS
     try:
         n = int(request.form['n'])
-        POINTS = pvc.generer_points(n)
+        POINTS = pvc_lib.generer_points(n)
     except ValueError:
         pass
     return redirect(url_for('index'))
