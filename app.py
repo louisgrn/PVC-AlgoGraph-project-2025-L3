@@ -1,17 +1,35 @@
 from flask import Flask, render_template, request, jsonify, redirect, url_for, send_from_directory
+from dotenv import load_dotenv
 import pvc_lib
 import threading
+import multiprocessing
 import time
 import json
 import os
 import tempfile
 
+load_dotenv()
+
 app = Flask(__name__)
 
 # Global state
 POINTS = []
+CURRENT_PROCESSES = []
 
-# Algorithm configuration structure
+# Helper function for multiprocessing
+def run_algo_process(algo_name, algo_func, points, queue):
+    start_time = time.time()
+    try:
+        path, length = algo_func(points)
+        duration = time.time() - start_time
+        queue.put({
+            "algo": algo_name,
+            "path": path,
+            "length": length,
+            "time": duration
+        })
+    except Exception as e:
+        print(f"Error running {algo_name}: {e}")
 # This allows easy addition/modification of algorithms
 ALGORITHMS = [
     {
@@ -24,7 +42,8 @@ ALGORITHMS = [
 
 @app.route('/')
 def index():
-    return render_template('index.html', points=POINTS)
+    max_points = os.environ.get('MAX_RANDOM_POINTS')
+    return render_template('index.html', points=POINTS, max_points=max_points)
 
 @app.route('/upload', methods=['POST'])
 def upload():
@@ -60,6 +79,12 @@ def generate():
     global POINTS
     try:
         n = int(request.form['n'])
+        max_points = os.environ.get('MAX_RANDOM_POINTS')
+        if max_points:
+            max_points = int(max_points)
+            if n > max_points:
+                n = max_points
+        
         POINTS = pvc_lib.generer_points(n)
     except ValueError:
         pass
@@ -77,40 +102,60 @@ def solve_page():
 
 @app.route('/run_solve', methods=['POST'])
 def run_solve():
+    global CURRENT_PROCESSES
     data = request.json
     selected_ids = data.get('algos', [])
     
-    results = []
-    threads = []
+    queue = multiprocessing.Queue()
+    CURRENT_PROCESSES = []
     
-    def run_algo(algo_conf):
-        start_time = time.time()
-        # Call the algorithm function
-        # Assuming signature is func(points) -> (path, length)
-        # pvc.ppp signature is (points, Q=None, D=None)
-        try:
-            path, length = algo_conf['func'](POINTS)
-            duration = time.time() - start_time
-            results.append({
-                "algo": algo_conf['name'],
-                "path": path,
-                "length": length,
-                "time": duration
-            })
-        except Exception as e:
-            print(f"Error running {algo_conf['name']}: {e}")
-
     for algo_id in selected_ids:
         algo_conf = next((a for a in ALGORITHMS if a['id'] == algo_id), None)
         if algo_conf:
-            t = threading.Thread(target=run_algo, args=(algo_conf,))
-            threads.append(t)
-            t.start()
+            p = multiprocessing.Process(
+                target=run_algo_process, 
+                args=(algo_conf['name'], algo_conf['func'], POINTS, queue)
+            )
+            CURRENT_PROCESSES.append(p)
+            p.start()
     
-    for t in threads:
-        t.join()
+    # Handle timeout
+    timeout_env = os.environ.get('GLOBAL_TIMEOUT')
+    timeout = int(timeout_env) if timeout_env else None
+    
+    start_wait = time.time()
+    
+    for p in CURRENT_PROCESSES:
+        if timeout:
+            elapsed = time.time() - start_wait
+            remaining = timeout - elapsed
+            if remaining < 0:
+                remaining = 0
+            p.join(remaining)
+        else:
+            p.join()
+            
+    # Terminate any still running (due to timeout)
+    for p in CURRENT_PROCESSES:
+        if p.is_alive():
+            p.terminate()
+            
+    CURRENT_PROCESSES = []
+    
+    results = []
+    while not queue.empty():
+        results.append(queue.get())
         
     return jsonify({"results": results})
+
+@app.route('/stop_solve', methods=['POST'])
+def stop_solve():
+    global CURRENT_PROCESSES
+    for p in CURRENT_PROCESSES:
+        if p.is_alive():
+            p.terminate()
+    CURRENT_PROCESSES = []
+    return jsonify({"status": "stopped"})
 
 @app.route('/stats')
 def stats():

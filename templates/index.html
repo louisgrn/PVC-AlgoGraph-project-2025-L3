@@ -42,7 +42,7 @@
             <div class="card-body">
                 <form action="/generate" method="post">
                      <div class="input-group">
-                        <input type="number" class="form-control" name="n" placeholder="Nombre de points" required>
+                        <input type="number" class="form-control" name="n" placeholder="Nombre de points{% if max_points %} (Max: {{ max_points }}){% endif %}" required {% if max_points %}max="{{ max_points }}"{% endif %}>
                         <button type="submit" class="btn btn-warning">Générer</button>
                      </div>
                 </form>

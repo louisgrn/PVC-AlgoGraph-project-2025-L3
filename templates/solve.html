@@ -18,9 +18,14 @@
                         </label>
                         {% endfor %}
                     </div>
-                    <button type="button" onclick="solve()" class="btn btn-primary w-100">
-                        <i class="fas fa-play me-2"></i>Lancer la Sélection
-                    </button>
+                    <div class="d-grid gap-2">
+                        <button type="button" onclick="solve()" class="btn btn-primary">
+                            <i class="fas fa-play me-2"></i>Lancer la Sélection
+                        </button>
+                        <button type="button" onclick="stopSolve()" class="btn btn-danger">
+                            <i class="fas fa-stop me-2"></i>Arrêter
+                        </button>
+                    </div>
                 </form>
             </div>
         </div>
@@ -115,6 +120,16 @@
     window.addEventListener('themeChanged', () => {
         plotGraph(currentRoutes);
     });
+
+    function stopSolve() {
+        fetch('/stop_solve', {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Stopped');
+        });
+    }
 
     function solve() {
         var selected = [];
