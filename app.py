@@ -13,6 +13,8 @@ load_dotenv()
 
 app = Flask(__name__)
 # Generate a secret key for session management
+# In production, always set SECRET_KEY environment variable
+# The auto-generated key will change on restart, invalidating sessions
 app.secret_key = os.environ.get('SECRET_KEY', secrets.token_hex(32))
 
 # Global state for process management (this can still be global)
@@ -176,7 +178,6 @@ def run_solve():
 
 @app.route('/stop_solve', methods=['POST'])
 def stop_solve():
-    global CURRENT_PROCESSES
     sid = get_session_id()
     if sid in CURRENT_PROCESSES:
         for p in CURRENT_PROCESSES[sid]:
