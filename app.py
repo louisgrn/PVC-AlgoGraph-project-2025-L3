@@ -73,6 +73,9 @@ def wrapper_optppp(points):
 def wrapper_prim_mst(points):
     return pvc_lib.optPrim(points)
 
+def wrapper_opt_opt_prim(points):
+    return pvc_lib.optOptPrim(points)
+
 # This allows easy addition/modification of algorithms
 ALGORITHMS = [
     {
@@ -89,6 +92,11 @@ ALGORITHMS = [
         "id": "optprim",
         "name": "Parcour préfix ACM de Prim Optimisé (OptPrim)",
         "func": wrapper_prim_mst
+    },
+    {
+        "id": "optoptprim",
+        "name": "OptPrim + Décroisé (OptOptPrim)",
+        "func": wrapper_opt_opt_prim
     }
 ]
 

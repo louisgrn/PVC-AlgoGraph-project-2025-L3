@@ -169,11 +169,11 @@ def ppp(points, D, Q=None):
 
 #%% Point le Plus Proche optimisé (OptPPP) :
 
-def optppp(c, D):
+def decroise(c, D):
     """
-    Procédure OptPPP : améliore le cycle fourni par PPP en décroisant les arêtes (2-opt).
+    Améliore le cycle en décroisant les arêtes.
     Args:
-        c (list): Cycle hamiltonien initial (liste d'indices)
+        c (list): Cycle hamiltonien (liste d'indices)
         D (np.ndarray): Matrice des distances
     Returns:
         tuple: (c, l) cycle optimisé et sa nouvelle longueur
@@ -201,6 +201,17 @@ def optppp(c, D):
         l += D[c[k], c[(k + 1) % n]]
 
     return c, l
+
+def optppp(c, D):
+    """
+    Procédure OptPPP : améliore le cycle fourni par PPP en décroisant les arêtes.
+    Args:
+        c (list): Cycle hamiltonien initial (liste d'indices)
+        D (np.ndarray): Matrice des distances
+    Returns:
+        tuple: (c, l) cycle optimisé et sa nouvelle longueur
+    """
+    return decroise(c, D)
 
 #%% Prim optimisé (OptPrim) :
 
@@ -380,3 +391,27 @@ def optPrim(points, D=None, r0=0):
         l += D[c[k], c[(k + 1) % n]]
 
     return c, l
+
+#%% Prim + décroisé (OptOptPrim) :
+
+def optOptPrim(points, D=None, r0=0):
+    """
+    Procédure OptOptPrim : combine OptPrim (MST + DFS) et décroisement.
+    Génère un cycle initial avec l'heuristique de l'arbre couvrant minimum,
+    puis l'améliore avec une recherche locale (décroisement).
+
+    Args:
+        points (list): Liste de tuples (x, y)
+        D (np.ndarray, optional): Matrice des distances. Si None, elle est calculée.
+        r0 (int, optional): Sommet de départ pour Prim. Par défaut 0.
+    Returns:
+        tuple: (c, l) cycle hamiltonien optimisé, longueur du cycle
+    """
+    if D is None:
+        D = calculer_matrice_distances(points)
+
+    # Étape 1: Obtenir le cycle initial via Prim + Parcours Préfixe
+    c_init, _ = optPrim(points, D, r0)
+
+    # Étape 2: Optimiser ce cycle avec décroisement
+    return decroise(c_init, D)
