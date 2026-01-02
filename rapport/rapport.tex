@@ -115,6 +115,12 @@ pip install requirement.txt
 \begin{tcolorbox}[colback=darkWhite!75!white,colframe=black!30,left=5pt,right=5pt,top=5pt,bottom=5pt]
 \textbf{Algorithme : Procédure PPP (Point le Plus Proche)} \\
 \textbf{Description :} Construit un cycle hamiltonien en insérant itérativement le point le plus proche du cycle actuel. \\
+\textbf{Vars :}
+\begin{itemize}
+    \item $c$ : Liste d'entiers (Cycle hamiltonien)
+    \item $l$ : Réel (Longueur du cycle)
+    \item $Q_i, Q_j$ : Entiers (Indices des points sélectionnés)
+\end{itemize}
 \textbf{Entrées :}
 \begin{itemize}
     \item $L$ : Liste de points $P_1, \dots, P_n$
@@ -144,6 +150,11 @@ pip install requirement.txt
 \begin{tcolorbox}[colback=darkWhite!75!white,colframe=black!30,left=5pt,right=5pt,top=5pt,bottom=5pt]
 \textbf{Algorithme : InsérerDansCycle} \\
 \textbf{Description :} Insère $Q_i$ dans $c$ soit entre $Q_j$ et son successeur, soit entre son prédécesseur et $Q_j$, selon le coût minimal, et met à jour la longueur du cycle. \\
+\textbf{Vars :}
+\begin{itemize}
+    \item $Q_{next}, Q_{prev}$ : Entiers (Indices des voisins de $Q_j$)
+    \item $\text{coût}_{\text{droite}}, \text{coût}_{\text{gauche}}$ : Réels (Coûts d'insertion)
+\end{itemize}
 \textbf{Entrées :}
 \begin{itemize}
     \item $c$ : Cycle partiel
@@ -169,11 +180,15 @@ pip install requirement.txt
 \end{enumerate}
 \end{tcolorbox}
 
-\vspace{5mm}
 
 \begin{tcolorbox}[colback=darkWhite!75!white,colframe=black!30,left=5pt,right=5pt,top=5pt,bottom=5pt]
 \textbf{Algorithme : TrouverCoupleMin} \\
 \textbf{Description :} Trouve le couple $(Q_i, Q_j)$ tel que $Q_i \in L$, $Q_j \in c$ et la distance $D[Q_i, Q_j]$ est minimale. \\
+\textbf{Vars :}
+\begin{itemize}
+    \item $d_{min}$ : Réel (Distance minimale trouvée)
+    \item $u, v$ : Entiers (Indices de parcours)
+\end{itemize}
 \textbf{Entrées :}
 \begin{itemize}
     \item $L$ : Liste des points non encore visités
@@ -201,6 +216,15 @@ pip install requirement.txt
 \begin{tcolorbox}[colback=darkWhite!75!white,colframe=black!30,left=5pt,right=5pt,top=5pt,bottom=5pt]
 \textbf{Algorithme : Procédure OptPPP} \\
 \textbf{Description :} Améliore le cycle fourni par PPP en décroisant les arêtes (2-opt) tant que cela réduit la distance totale. \\
+\textbf{Vars :}
+\begin{itemize}
+    \item $n$ : Entier (Nombre de points)
+    \item $\text{amélioration}$ : Booléen (Indicateur de modification)
+    \item $i, j$ : Entiers (Indices de boucle)
+    \item $u, v, x, y$ : Entiers (Indices des points des arêtes)
+    \item $d_{actuelle}, d_{nouvelle}$ : Réels (Distances comparées)
+    \item $p, q$ : Entiers (Indices pour l'inversion)
+\end{itemize}
 \textbf{Entrées :}
 \begin{itemize}
     \item $c$ : Cycle hamiltonien initial (liste de points $P_1, \dots, P_n$)
@@ -236,9 +260,60 @@ pip install requirement.txt
 \end{enumerate}
 \end{tcolorbox}
 
-\subsection{Arbre couvrant de poids minimum (OptPrim)}
+\subsection{Parcour en largeur d'un ACM à partir de Prim (OptPrim)}
 
-\textit{Section à compléter.}
+
+\begin{tcolorbox}[colback=darkWhite!75!white,colframe=black!30,left=5pt,right=5pt,top=5pt,bottom=5pt]
+\textbf{Structure de données : GraphePrim}
+
+\textbf{Type} GraphePrim = \textbf{Enregistrement} \\
+\quad cle : Tableau[1..n] de Réel; \\
+\quad pred : Tableau[1..n] d'Entier; \\
+\quad NoeudTas : Tableau[1..n] d'Entier \\
+\quad Tas : Tableau[1..n] d'Entier \\1
+\textbf{Fin};
+\end{tcolorbox}
+
+
+\begin{tcolorbox}[colback=darkWhite!75!white,colframe=black!30,left=5pt,right=5pt,top=5pt,bottom=5pt]
+\textbf{Algorithme : Prim (Optimisé)} \\
+\textbf{Description :} Construit un arbre couvrant de poids minimum (MST) en utilisant un tas binaire pour sélectionner efficacement le prochain sommet le plus proche. \\
+\textbf{Vars :}
+\begin{itemize}
+    \item $GraphePrim$ : Structure GraphePrim (Données du graphe et du tas)
+    \item $pres$ : Tableau de booléens (Indique si un sommet est dans le tas)
+    \item $u, v$ : Entiers (Indices de sommets)
+\end{itemize}
+\textbf{Entrées :}
+\begin{itemize}
+    \item $D$ : Matrice des distances $n \times n$
+    \item $r0$ : Sommet de départ (par défaut 0)
+\end{itemize}
+\textbf{Sorties :}
+\begin{itemize}
+    \item $pred$ : Liste des prédécesseurs définissant l'arbre couvrant
+\end{itemize}
+\textbf{Début :}
+\begin{enumerate}
+    \item Initialiser $GraphePrim$ avec $n$ sommets
+    \item $pres \leftarrow$ Tableau de booléens initialisé à \texttt{Vrai} (indique si un sommet est dans le tas)
+    \item $GraphePrim.cle[r0] \leftarrow 0$
+    \item $GraphePrim.echanger(0, GraphePrim.noeudTas[r0])$ \textit{// Placer r0 à la racine}
+    \item Tant que $GraphePrim.tas$ n'est pas vide faire :
+    \item \quad $u \leftarrow GraphePrim.tas[0]$ \textit{// Extraire le min}
+    \item \quad $pres[u] \leftarrow \texttt{Faux}$
+    \item \quad $GraphePrim.echanger(0, \text{taille}(tas) - 1)$
+    \item \quad Retirer le dernier élément de $GraphePrim.tas$
+    \item \quad Si $GraphePrim.tas$ non vide alors :
+    \item \quad \quad $GraphePrim.versLeBas(0)$
+    \item \quad Pour chaque sommet $v$ de $0$ à $n-1$ faire :
+    \item \quad \quad Si $pres[v]$ et $D[u, v] < GraphePrim.cle[v]$ alors :
+    \item \quad \quad \quad $GraphePrim.cle[v] \leftarrow D[u, v]$
+    \item \quad \quad \quad $GraphePrim.pred[v] \leftarrow u$
+    \item \quad \quad \quad $GraphePrim.versLeHaut(GraphePrim.noeudTas[v])$
+    \item Retourner $GraphePrim.pred$
+\end{enumerate}
+\end{tcolorbox}
 
 \subsection{Évaluation et séparation progressive ("branch and bound") (HDS)}
 

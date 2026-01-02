@@ -46,10 +46,10 @@ def set_points(points):
 
 # Helper function for multiprocessing
 def run_algo_process(algo_name, algo_func, points, queue):
-    start_time = time.time()
+    start_time = time.perf_counter()
     try:
         path, length = algo_func(points)
-        duration = time.time() - start_time
+        duration = time.perf_counter() - start_time
         queue.put({
             "algo": algo_name,
             "path": path,
@@ -70,6 +70,9 @@ def wrapper_optppp(points):
     # Optimization using 2-opt
     return pvc_lib.optppp(c_init, D)
 
+def wrapper_prim_mst(points):
+    return pvc_lib.optPrim(points)
+
 # This allows easy addition/modification of algorithms
 ALGORITHMS = [
     {
@@ -81,6 +84,11 @@ ALGORITHMS = [
         "id": "optppp",
         "name": "PPP Optimisé (OptPPP)",
         "func": wrapper_optppp
+    },
+    {
+        "id": "optprim",
+        "name": "Parcour préfix ACM de Prim Optimisé (OptPrim)",
+        "func": wrapper_prim_mst
     }
 ]
 

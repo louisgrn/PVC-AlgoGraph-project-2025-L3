@@ -121,17 +121,17 @@ def inserer_dans_cycle(c, Q_i, Q_j, D, l):
     """
     n = len(c)
     idx_j = c.index(Q_j)
-    
+
     # Insertion entre Q_j et le suivant (j+1)
     idx_next = (idx_j + 1) % n
     Q_next = c[idx_next]
     cout_droite = D[Q_j, Q_i] + D[Q_i, Q_next] - D[Q_j, Q_next]
-    
+
     # Insertion entre le précédent (j-1) et Q_j
     idx_prev = (idx_j - 1) % n
     Q_prev = c[idx_prev]
     cout_gauche = D[Q_prev, Q_i] + D[Q_i, Q_j] - D[Q_prev, Q_j]
-    
+
     # Choix du meilleur
     if cout_droite <= cout_gauche:
         c.insert(idx_j + 1, Q_i)
@@ -167,6 +167,8 @@ def ppp(points, D, Q=None):
         L.remove(Q_i)
     return c, l
 
+#%% Point le Plus Proche optimisé (OptPPP) :
+
 def optppp(c, D):
     """
     Procédure OptPPP : améliore le cycle fourni par PPP en décroisant les arêtes (2-opt).
@@ -192,11 +194,189 @@ def optppp(c, D):
                     # Inversion de la sous-séquence entre i+1 et j
                     c[i+1:j+1] = c[i+1:j+1][::-1]
                     amelioration = True
-    
+
     # Recalcul de la longueur totale du cycle optimisé
     l = 0.0
     for k in range(n):
         l += D[c[k], c[(k + 1) % n]]
-        
+
     return c, l
 
+#%% Prim optimisé (OptPrim) :
+
+class GraphePrim:
+    def __init__(self, n):
+        """
+        Initialise la structure de données pour l'algorithme de Prim.
+        Args:
+            n (int): Nombre de sommets du graphe.
+        """
+        self.cle = [float('inf')] * n
+        self.pred = [None] * n
+        self.noeudTas = list(range(n))
+        self.tas = list(range(n))
+    
+    def echanger(self, i, j):
+        """
+        Échange deux éléments dans le tas et met à jour leurs positions.
+        Args:
+            i (int): Indice du premier élément dans le tas.
+            j (int): Indice du deuxième élément dans le tas.
+        """
+        temp = self.tas[i]
+        self.tas[i] = self.tas[j]
+        self.tas[j] = temp
+        self.noeudTas[self.tas[i]] = i
+        self.noeudTas[self.tas[j]] = j
+
+    def priorite(self, i):
+        """
+        Retourne la priorité (clé) d'un élément à une position donnée dans le tas.
+        Args:
+            i (int): Indice dans le tas.
+        Returns:
+            float: La valeur de la clé associée.
+        """
+        return self.cle[self.tas[i]]
+        
+    def versLeHaut(self, i):
+        """
+        Fait remonter un élément dans le tas pour respecter la propriété de tas min.
+        Args:
+            i (int): Indice de l'élément à faire remonter.
+        """
+        while i > 0 and self.priorite(i) < self.priorite((i - 1) // 2):
+            self.echanger(i, (i - 1) // 2)
+            i = (i - 1) // 2
+
+    def versLeBas(self, i):
+        """
+        Fait descendre un élément dans le tas pour respecter la propriété de tas min.
+        Args:
+            i (int): Indice de l'élément à faire descendre.
+        """
+        s = 2 * i + 1
+        while s < len(self.tas):
+            if s + 1 < len(self.tas) and self.priorite(s + 1) < self.priorite(s):
+                s += 1
+            if self.priorite(i) > self.priorite(s):
+                self.echanger(i, s)
+                i = s
+                s = 2 * i + 1
+            else:
+                break
+
+def prim(D, r0=0):
+    """
+    Algorithme de Prim pour trouver l'arbre couvrant de poids minimal.
+    Args:
+        D (np.ndarray): Matrice des distances
+        r0 (int, optional): Sommet de départ. Par défaut 0.
+    Returns:
+        list: Liste des prédécesseurs (pred[i] est le parent de i dans l'arbre)
+    """
+    n = len(D)
+    graphe = GraphePrim(n)
+    pres = [True] * n
+
+    # Initialiser la clé du sommet de départ
+    graphe.cle[r0] = 0
+    # Placer r0 à la racine du tas
+    graphe.echanger(0, graphe.noeudTas[r0])
+
+    while len(graphe.tas) > 0:
+        u = graphe.tas[0]
+        pres[u] = False
+        
+        graphe.echanger(0, len(graphe.tas) - 1)
+        graphe.tas.pop()
+        
+        if len(graphe.tas) > 0:
+            graphe.versLeBas(0)
+
+        for v in range(n):
+            if pres[v] and D[u, v] < graphe.cle[v]:
+                graphe.cle[v] = D[u, v]
+                graphe.pred[v] = u
+                graphe.versLeHaut(graphe.noeudTas[v])
+        
+    return graphe.pred
+
+def pred_to_tree(pred):
+    """
+    Convertit la liste des prédécesseurs en une structure d'arbre (dictionnaire d'adjacence).
+    Args:
+        pred (list): Liste des prédécesseurs où pred[i] est le parent de i.
+    Returns:
+        tuple: (d, racine) où d est le dictionnaire d'adjacence et racine est l'indice de la racine.
+    """
+    d = {}
+    racine = -1
+    for i in range(len(pred)):
+        d[i] = []
+        if pred[i] is None or pred[i] == -1:
+            racine = i
+
+    for i in range(len(pred)):
+        if pred[i] is not None and pred[i] != -1:
+            d[pred[i]].append(i)
+
+    return d, racine
+
+
+def parcours_prefixe(d,racine):
+    """
+    Effectue un parcours préfixe (DFS) de l'arbre pour obtenir l'ordre de visite des sommets.
+    Args:
+        d (dict): Dictionnaire d'adjacence de l'arbre.
+        racine (int): Indice de la racine de l'arbre.
+    Returns:
+        list: Liste des sommets dans l'ordre du parcours préfixe.
+    """
+    stack = [racine]
+    p = [0] * len(d)
+    p_etoile = [racine]
+    p[racine] = 1
+    count = 2
+    while len(stack) > 0 :
+        lst_voisin = d[stack[len(stack) -1]]
+        rep = False
+
+        for i in range(len(lst_voisin)):
+            voisin = lst_voisin[i]
+            if p[voisin] ==0 :
+                stack.append(voisin)
+                p_etoile.append(voisin)
+                p[voisin] = count
+                count +=1
+                rep = True
+                break
+
+        if not rep :
+            stack.pop()
+    return p_etoile
+
+def optPrim(points, D=None, r0=0):
+    """
+    Procédure OptPrim : construit un cycle hamiltonien à partir de l'arbre couvrant minimal en utilisant un parcours préfixe.
+    Args:
+        points (list): Liste de tuples (x, y)
+        D (np.ndarray, optional): Matrice des distances. Si None, elle est calculée.
+        r0 (int, optional): Sommet de départ pour Prim. Par défaut 0.
+    Returns:
+        tuple: (c, l) cycle hamiltonien (liste d'indices), longueur du cycle
+    """
+    if D is None:
+        D = calculer_matrice_distances(points)
+
+    pred = prim(D, r0)
+    d, racine = pred_to_tree(pred)
+    c = parcours_prefixe(d, racine)
+
+    # Calcul de la longueur totale du cycle
+    l = 0.0
+    n = len(c)
+    for k in range(n):
+        l += D[c[k], c[(k + 1) % n]]
+
+    return c, l
