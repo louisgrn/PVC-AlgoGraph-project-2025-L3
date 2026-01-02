@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, jsonify, redirect, url_for, send_from_directory, session
 from dotenv import load_dotenv
 import pvc_lib
+import pvc_main
 import threading
 import multiprocessing
 import time
@@ -225,7 +226,84 @@ def stop_solve():
 
 @app.route('/stats')
 def stats():
-    return render_template('stats.html')
+    max_tests = os.environ.get('MAX_STATS_TESTS', '100')
+    max_vertices = os.environ.get('MAX_STATS_VERTICES', '200')
+    return render_template('stats.html', max_tests=max_tests, max_vertices=max_vertices)
+
+@app.route('/run_stats', methods=['POST'])
+def run_stats():
+    try:
+        data = request.json
+        num_tests = int(data.get('num_tests', 10))
+        num_vertices = int(data.get('num_vertices', 20))
+        
+        # Apply limits from .env
+        max_tests = int(os.environ.get('MAX_STATS_TESTS', '100'))
+        max_vertices = int(os.environ.get('MAX_STATS_VERTICES', '200'))
+        
+        num_tests = min(num_tests, max_tests)
+        num_vertices = min(num_vertices, max_vertices)
+        
+        # Use pvc_lib functions directly (they expect distance matrix D)
+        list_func = [pvc_lib.ppp, pvc_lib.optppp, pvc_lib.optPrim, pvc_lib.optOptPrim]
+        labels = ["PPP", "OptPPP", "OptPrim", "OptOptPrim"]
+        
+        # Generate results
+        results_1_n = pvc_main.exec_all_from_1_to_n_sommet(num_tests, list_func)
+        results = pvc_main.exec_all(num_tests, num_vertices, list_func)
+        
+        # Create image directory if it doesn't exist
+        img_dir = os.path.join(os.path.dirname(__file__), 'img')
+        os.makedirs(img_dir, exist_ok=True)
+        
+        # Generate and save plots
+        img1_path = os.path.join(img_dir, 'execution_times_and_lengths.png')
+        img2_path = os.path.join(img_dir, 'average_time.png')
+        img3_path = os.path.join(img_dir, 'average_length.png')
+        
+        pvc_main.plot_execution_times_and_lengths(results_1_n, labels, path=img1_path)
+        pvc_main.plot_average_time(results, labels, path=img2_path)
+        pvc_main.plot_average_length(results, labels, path=img3_path)
+        
+        # Calculate averages for table
+        stats_data = []
+        for i in range(len(results)):
+            times, lengths = results[i]
+            avg_time = sum(times) / len(times)
+            avg_length = sum(lengths) / len(lengths)
+            stats_data.append({
+                'algo': labels[i],
+                'avg_time': round(avg_time, 6),
+                'avg_length': round(avg_length, 2)
+            })
+        
+        # Calculate percentages
+        ppp_length = sum(results[0][1]) / len(results[0][1])
+        optppp_length = sum(results[1][1]) / len(results[1][1])
+        optprim_length = sum(results[2][1]) / len(results[2][1])
+        
+        pct_optppp_vs_ppp = ((optppp_length - ppp_length) / ppp_length) * 100
+        pct_optprim_vs_optppp = ((optprim_length - optppp_length) / optppp_length) * 100
+        
+        return jsonify({
+            'status': 'success',
+            'stats': stats_data,
+            'comparisons': {
+                'optppp_vs_ppp': round(pct_optppp_vs_ppp, 2),
+                'optprim_vs_optppp': round(pct_optprim_vs_optppp, 2)
+            },
+            'images': {
+                'execution_times_and_lengths': '/img/execution_times_and_lengths.png',
+                'average_time': '/img/average_time.png',
+                'average_length': '/img/average_length.png'
+            }
+        })
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/img/<path:filename>')
+def serve_img(filename):
+    return send_from_directory('img', filename)
 
 @app.route('/rapport')
 def rapport():

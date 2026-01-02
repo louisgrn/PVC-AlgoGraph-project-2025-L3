@@ -1,4 +1,6 @@
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')  # Use non-interactive backend for server environments
 import matplotlib.pyplot as plt
 from multiprocessing import Pool
 import time
@@ -97,7 +99,7 @@ def exec_all(m, sommet_n, list_func):
     return results
 
 
-def plot_execution_times_and_lengths(results, labels):
+def plot_execution_times_and_lengths(results, labels, path=None):
     times_list = [r[0] for r in results]
     lengths_list = [r[1] for r in results]
     
@@ -125,7 +127,11 @@ def plot_execution_times_and_lengths(results, labels):
     ax2.grid(True)
 
     plt.tight_layout()
-    plt.show()
+    if path:
+        plt.savefig(path)
+        plt.close(fig)
+    else:
+        plt.show()
 
 def show_average(result, labels):
   for i in range(len(result)):
@@ -134,7 +140,8 @@ def show_average(result, labels):
     avg_length = sum(lengths) / len(lengths)
     print(f"{labels[i]} : Temps moyen : {avg_time:.6f} s, Longueur moyenne : {avg_length:.2f}")
     
-def plot_average_time(result, labels):
+def plot_average_time(result, labels, path=None):
+    fig = plt.figure(figsize=(10, 6))
     for i in range(len(result)):
         times, lengths = result[i]
         avg_time = sum(times) / len(times)
@@ -145,9 +152,14 @@ def plot_average_time(result, labels):
     plt.ylabel("Temps moyen (s)")
     plt.xticks(range(len(labels)), labels)
     plt.legend()
-    plt.show()
+    if path:
+        plt.savefig(path)
+        plt.close(fig)
+    else:
+        plt.show()
 
-def plot_average_length(result, labels):
+def plot_average_length(result, labels, path=None):
+    fig = plt.figure(figsize=(10, 6))
     for i in range(len(result)):
         times, lengths = result[i]
         avg_length = sum(lengths) / len(lengths)
@@ -157,7 +169,11 @@ def plot_average_length(result, labels):
     plt.ylabel("Longueur moyenne")
     plt.xticks(range(len(labels)), labels)
     plt.legend()
-    plt.show()
+    if path:
+        plt.savefig(path)
+        plt.close(fig)
+    else:
+        plt.show()
 
 
 if __name__ == "__main__":

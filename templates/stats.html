@@ -1,14 +1,191 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="card shadow-sm">
-    <div class="card-header bg-info text-white">
-        <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Statistiques</h5>
+<div class="row g-4">
+    <div class="col-lg-12">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Statistiques et Comparaisons</h5>
+            </div>
+            <div class="card-body">
+                <form id="statsForm">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="num_tests" class="form-label">Nombre de tests</label>
+                            <input type="number" class="form-control" id="num_tests" name="num_tests" value="10" min="1" max="{{ max_tests }}" required>
+                            <div class="form-text">Maximum: {{ max_tests }}</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="num_vertices" class="form-label">Nombre de sommets</label>
+                            <input type="number" class="form-control" id="num_vertices" name="num_vertices" value="20" min="1" max="{{ max_vertices }}" required>
+                            <div class="form-text">Maximum: {{ max_vertices }}</div>
+                        </div>
+                    </div>
+                    <div class="d-grid gap-2 mt-3">
+                        <button type="button" onclick="runStats()" class="btn btn-primary">
+                            <i class="fas fa-play me-2"></i>Générer les statistiques
+                        </button>
+                    </div>
+                </form>
+                
+                <div id="loading" class="text-center my-4" style="display: none;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Chargement...</span>
+                    </div>
+                    <p class="mt-2">Calcul en cours... Cela peut prendre quelques minutes.</p>
+                </div>
+                
+                <div id="error-message" class="alert alert-danger mt-3" style="display: none;"></div>
+            </div>
+        </div>
     </div>
-    <div class="card-body text-center py-5">
-        <i class="fas fa-chart-bar fa-4x text-muted mb-3"></i>
-        <p class="lead text-muted">Aucune statistique disponible pour le moment.</p>
-        <p>Lancez des algorithmes sur la page <a href="/solve">Résoudre</a> pour générer des données.</p>
+    
+    <div id="results-container" style="display: none;">
+        <div class="col-lg-12">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-table me-2"></i>Résultats Moyens</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Algorithme</th>
+                                    <th>Temps moyen (s)</th>
+                                    <th>Longueur moyenne</th>
+                                </tr>
+                            </thead>
+                            <tbody id="stats-table">
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <h6>Comparaisons:</h6>
+                        <ul id="comparisons-list">
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-12">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Graphiques</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-12 mb-4">
+                            <h6>Temps d'exécution et Longueur du cycle</h6>
+                            <img id="img1" src="" alt="Execution times and lengths" class="img-fluid">
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <h6>Temps d'exécution moyen</h6>
+                            <img id="img2" src="" alt="Average time" class="img-fluid">
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <h6>Longueur moyenne du cycle</h6>
+                            <img id="img3" src="" alt="Average length" class="img-fluid">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
+
+<script>
+function runStats() {
+    const numTests = document.getElementById('num_tests').value;
+    const numVertices = document.getElementById('num_vertices').value;
+    
+    // Validate inputs
+    const maxTests = {{ max_tests }};
+    const maxVertices = {{ max_vertices }};
+    
+    if (numTests < 1 || numTests > maxTests) {
+        showError(`Le nombre de tests doit être entre 1 et ${maxTests}`);
+        return;
+    }
+    
+    if (numVertices < 1 || numVertices > maxVertices) {
+        showError(`Le nombre de sommets doit être entre 1 et ${maxVertices}`);
+        return;
+    }
+    
+    // Hide previous results and errors
+    document.getElementById('results-container').style.display = 'none';
+    document.getElementById('error-message').style.display = 'none';
+    
+    // Show loading spinner
+    document.getElementById('loading').style.display = 'block';
+    
+    fetch('/run_stats', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            num_tests: parseInt(numTests),
+            num_vertices: parseInt(numVertices)
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        document.getElementById('loading').style.display = 'none';
+        
+        if (data.status === 'success') {
+            displayResults(data);
+        } else {
+            showError(data.message || 'Une erreur est survenue');
+        }
+    })
+    .catch(error => {
+        document.getElementById('loading').style.display = 'none';
+        showError('Erreur de communication avec le serveur: ' + error.message);
+    });
+}
+
+function displayResults(data) {
+    // Show results container
+    document.getElementById('results-container').style.display = 'block';
+    
+    // Fill stats table
+    const statsTable = document.getElementById('stats-table');
+    statsTable.innerHTML = '';
+    data.stats.forEach(stat => {
+        const row = statsTable.insertRow();
+        row.insertCell(0).textContent = stat.algo;
+        row.insertCell(1).textContent = stat.avg_time;
+        row.insertCell(2).textContent = stat.avg_length;
+    });
+    
+    // Fill comparisons
+    const comparisonsList = document.getElementById('comparisons-list');
+    comparisonsList.innerHTML = '';
+    const li1 = document.createElement('li');
+    li1.textContent = `OptPPP vs PPP: ${data.comparisons.optppp_vs_ppp > 0 ? '+' : ''}${data.comparisons.optppp_vs_ppp}%`;
+    comparisonsList.appendChild(li1);
+    const li2 = document.createElement('li');
+    li2.textContent = `OptPrim vs OptPPP: ${data.comparisons.optprim_vs_optppp > 0 ? '+' : ''}${data.comparisons.optprim_vs_optppp}%`;
+    comparisonsList.appendChild(li2);
+    
+    // Display images with timestamp to avoid cache
+    const timestamp = new Date().getTime();
+    document.getElementById('img1').src = data.images.execution_times_and_lengths + '?t=' + timestamp;
+    document.getElementById('img2').src = data.images.average_time + '?t=' + timestamp;
+    document.getElementById('img3').src = data.images.average_length + '?t=' + timestamp;
+    
+    // Scroll to results
+    document.getElementById('results-container').scrollIntoView({ behavior: 'smooth' });
+}
+
+function showError(message) {
+    const errorDiv = document.getElementById('error-message');
+    errorDiv.textContent = message;
+    errorDiv.style.display = 'block';
+}
+</script>
 {% endblock %}

@@ -1,6 +1,11 @@
 doc/
 __pycache__/
 
+# Generated images
+img/*.png
+img/*.jpg
+img/*.jpeg
+
 # latex
 *.aux
 *.fdb_latexmk
