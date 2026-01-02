@@ -2,6 +2,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from multiprocessing import Pool
 import time
+import sys
+import threading
+import itertools
 import pvc_lib as pvc
 
 
@@ -47,8 +50,27 @@ def exec_all_from_1_to_n_sommet(n, list_func):
     
     args_list = [(test_data, f) for f in list_func]
     
-    with Pool() as p:
-        results = p.map(exec_func, args_list)
+    # Affiche un spinner pendant l'exécution pour indiquer que le travail est en cours
+    stop = threading.Event()
+    def _spin():
+        for c in itertools.cycle("|/-\\"):
+            if stop.is_set():
+                break
+            sys.stdout.write(f"\rExecution en cours (1..{n}) {c}")
+            sys.stdout.flush()
+            time.sleep(0.1)
+        # Efface la ligne une fois terminé
+        sys.stdout.write('\r' + ' ' * (30) + '\r')
+        sys.stdout.flush()
+
+    th = threading.Thread(target=_spin)
+    th.start()
+    try:
+        with Pool() as p:
+            results = p.map(exec_func, args_list)
+    finally:
+        stop.set()
+        th.join()
         
     return results
 
@@ -58,8 +80,27 @@ def exec_all(m, sommet_n, list_func):
     
     args_list = [(test_data, f) for f in list_func]
     
-    with Pool() as p:
-        results = p.map(exec_func, args_list)
+    # Affiche un spinner pendant l'exécution pour indiquer que le travail est en cours
+    stop = threading.Event()
+    def _spin():
+        for c in itertools.cycle("|/-\\"):
+            if stop.is_set():
+                break
+            sys.stdout.write(f"\rExecution en cours ({m}x {sommet_n} sommets) {c}")
+            sys.stdout.flush()
+            time.sleep(0.1)
+        # Efface la ligne une fois terminé
+        sys.stdout.write('\r' + ' ' * (40) + '\r')
+        sys.stdout.flush()
+
+    th = threading.Thread(target=_spin)
+    th.start()
+    try:
+        with Pool() as p:
+            results = p.map(exec_func, args_list)
+    finally:
+        stop.set()
+        th.join()
         
     return results
 
@@ -128,13 +169,16 @@ def plot_average_length(result, labels):
 
 
 if __name__ == "__main__":
-    n = 10
+    number_of_tests = 100
+    number_of_sommet = 200
     list_func = [pvc.ppp, pvc.optppp, pvc.optPrim, pvc.optOptPrim]
     labels = ["PPP", "OptPPP", "OptPrim", "OptOptPrim"]
-    # results = exec_all(n, list_func)
-    results = exec_all(n, 500, list_func)
-    # plot_execution_times_and_lengths(results, labels)
+    print("Execution des algorithmes de 1 à", number_of_tests, "sommets")
+    results_1_n = exec_all_from_1_to_n_sommet(number_of_tests, list_func)
+    print("Execution des algorithmes sur", number_of_sommet, "sommets, répété", number_of_tests, "fois")
+    results = exec_all(number_of_tests, number_of_sommet, list_func)
     show_average(results, labels)
+    plot_execution_times_and_lengths(results_1_n, labels)
     plot_average_time(results, labels)
     plot_average_length(results, labels)
 
