@@ -7,6 +7,36 @@ import threading
 import itertools
 import pvc_lib as pvc
 
+# Copier coller d'un site pour l'effet visuel dans la console
+
+class Spinner:
+    """Simple console spinner that runs on a separate thread."""
+    def __init__(self, message="Execution en cours", delay=0.1):
+        self._message = message
+        self._delay = delay
+        self._stop = threading.Event()
+        self._thread = threading.Thread(target=self._spin)
+
+    def _spin(self):
+        for c in itertools.cycle("|/-\\"):
+            if self._stop.is_set():
+                break
+            sys.stdout.write(f"\r{self._message} {c}")
+            sys.stdout.flush()
+            time.sleep(self._delay)
+        sys.stdout.write('\r' + ' ' * (len(self._message) + 4) + '\r')
+        sys.stdout.flush()
+
+    def start(self):
+        if not self._thread.is_alive():
+            self._stop.clear()
+            self._thread = threading.Thread(target=self._spin)
+            self._thread.start()
+
+    def stop(self):
+        self._stop.set()
+        self._thread.join()
+
 
 # def generer_points(n):
 #   """
@@ -50,27 +80,8 @@ def exec_all_from_1_to_n_sommet(n, list_func):
     
     args_list = [(test_data, f) for f in list_func]
     
-    # Affiche un spinner pendant l'exécution pour indiquer que le travail est en cours
-    stop = threading.Event()
-    def _spin():
-        for c in itertools.cycle("|/-\\"):
-            if stop.is_set():
-                break
-            sys.stdout.write(f"\rExecution en cours (1..{n}) {c}")
-            sys.stdout.flush()
-            time.sleep(0.1)
-        # Efface la ligne une fois terminé
-        sys.stdout.write('\r' + ' ' * (30) + '\r')
-        sys.stdout.flush()
-
-    th = threading.Thread(target=_spin)
-    th.start()
-    try:
-        with Pool() as p:
-            results = p.map(exec_func, args_list)
-    finally:
-        stop.set()
-        th.join()
+    with Pool() as p:
+        results = p.map(exec_func, args_list)
         
     return results
 
@@ -80,27 +91,8 @@ def exec_all(m, sommet_n, list_func):
     
     args_list = [(test_data, f) for f in list_func]
     
-    # Affiche un spinner pendant l'exécution pour indiquer que le travail est en cours
-    stop = threading.Event()
-    def _spin():
-        for c in itertools.cycle("|/-\\"):
-            if stop.is_set():
-                break
-            sys.stdout.write(f"\rExecution en cours ({m}x {sommet_n} sommets) {c}")
-            sys.stdout.flush()
-            time.sleep(0.1)
-        # Efface la ligne une fois terminé
-        sys.stdout.write('\r' + ' ' * (40) + '\r')
-        sys.stdout.flush()
-
-    th = threading.Thread(target=_spin)
-    th.start()
-    try:
-        with Pool() as p:
-            results = p.map(exec_func, args_list)
-    finally:
-        stop.set()
-        th.join()
+    with Pool() as p:
+        results = p.map(exec_func, args_list)
         
     return results
 
@@ -173,11 +165,26 @@ if __name__ == "__main__":
     number_of_sommet = 200
     list_func = [pvc.ppp, pvc.optppp, pvc.optPrim, pvc.optOptPrim]
     labels = ["PPP", "OptPPP", "OptPrim", "OptOptPrim"]
-    print("Execution des algorithmes de 1 à", number_of_tests, "sommets")
-    results_1_n = exec_all_from_1_to_n_sommet(number_of_tests, list_func)
-    print("Execution des algorithmes sur", number_of_sommet, "sommets, répété", number_of_tests, "fois")
-    results = exec_all(number_of_tests, number_of_sommet, list_func)
+    spinner = Spinner("Execution en cours...", delay=0.1)
+    try:
+        spinner.start()
+        print("Execution des algorithmes de 1 à", number_of_tests, "sommets")
+        results_1_n = exec_all_from_1_to_n_sommet(number_of_tests, list_func)
+        print("Execution des algorithmes sur", number_of_sommet, "sommets, répété", number_of_tests, "fois")
+        results = exec_all(number_of_tests, number_of_sommet, list_func)
+    finally:
+        spinner.stop()
     show_average(results, labels)
+    # Calcul des pourcentages gagnés/perdus
+    ppp_length = sum(results[0][1]) / len(results[0][1])
+    optppp_length = sum(results[1][1]) / len(results[1][1])
+    optprim_length = sum(results[2][1]) / len(results[2][1])
+
+    pct_optppp_vs_ppp = ((optppp_length - ppp_length) / ppp_length) * 100
+    pct_optprim_vs_optppp = ((optprim_length - optppp_length) / optppp_length) * 100
+
+    print(f"\nOptPPP vs PPP: {pct_optppp_vs_ppp:+.2f}%")
+    print(f"OptPrim vs OptPPP: {pct_optprim_vs_optppp:+.2f}%")
     plot_execution_times_and_lengths(results_1_n, labels)
     plot_average_time(results, labels)
     plot_average_length(results, labels)
