@@ -153,6 +153,8 @@ def ppp(points, Q=None, D=None):
         tuple: (c, l) cycle hamiltonien (liste d'indices), longueur du cycle
     """
     n = len(points)
+    if n == 0:
+        return [], 0.0
     if D is None:
         D = calculer_matrice_distances(points)
     if Q is None:

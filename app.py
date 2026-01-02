@@ -20,23 +20,29 @@ app.secret_key = os.environ.get('SECRET_KEY', secrets.token_hex(32))
 # Global state for process management (this can still be global)
 CURRENT_PROCESSES = {}
 
+# Server-side session storage to avoid cookie size limits
+SERVER_SESSIONS = {}
+
 # Helper functions for session management
-def get_points():
-    """Get points from the session for the current user."""
-    if 'points' not in session:
-        session['points'] = []
-    return session['points']
-
-def set_points(points):
-    """Set points in the session for the current user."""
-    session['points'] = points
-    session.modified = True
-
 def get_session_id():
     """Get or create a unique session ID for tracking processes."""
     if 'session_id' not in session:
         session['session_id'] = secrets.token_hex(16)
     return session['session_id']
+
+def get_points():
+    """Get points from the server-side session for the current user."""
+    sid = get_session_id()
+    if sid not in SERVER_SESSIONS:
+        SERVER_SESSIONS[sid] = {'points': []}
+    return SERVER_SESSIONS[sid].get('points', [])
+
+def set_points(points):
+    """Set points in the server-side session for the current user."""
+    sid = get_session_id()
+    if sid not in SERVER_SESSIONS:
+        SERVER_SESSIONS[sid] = {}
+    SERVER_SESSIONS[sid]['points'] = points
 
 # Helper function for multiprocessing
 def run_algo_process(algo_name, algo_func, points, queue):
