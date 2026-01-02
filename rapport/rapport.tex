@@ -198,7 +198,43 @@ pip install requirement.txt
 
 \subsection{Point le Plus Proche Optimisé (OptPPP)}
 
-\textit{Section à compléter.}
+\begin{tcolorbox}[colback=darkWhite!75!white,colframe=black!30,left=5pt,right=5pt,top=5pt,bottom=5pt]
+\textbf{Algorithme : Procédure OptPPP} \\
+\textbf{Description :} Améliore le cycle fourni par PPP en décroisant les arêtes (2-opt) tant que cela réduit la distance totale. \\
+\textbf{Entrées :}
+\begin{itemize}
+    \item $c$ : Cycle hamiltonien initial (liste de points $P_1, \dots, P_n$)
+    \item $D$ : Matrice des distances
+\end{itemize}
+\textbf{Sorties :} $c$ (cycle optimisé) \\
+\textbf{Début :}
+\begin{enumerate}
+    \item $n \leftarrow \text{taille}(c)$
+    \item $\text{amélioration} \leftarrow \text{Vrai}$
+    \item Tant que $\text{amélioration}$ faire : \textit{// Répéter tant qu'on trouve une amélioration}
+    \item \quad $\text{amélioration} \leftarrow \text{Faux}$
+    \item \quad Pour $i$ allant de $1$ à $n-2$ faire : \textit{// Récupération de la première arête en provyant de la place pour la seconde}
+    \item \quad \quad Pour $j$ allant de $i+2$ à $n$ faire : \textit{// Récupération de la seconde arête apès la première mais sans être adjacent à la première}
+    \item \quad \quad \quad $u \leftarrow c[i]$
+    \item \quad \quad \quad $v \leftarrow c[i+1]$
+    \item \quad \quad \quad $x \leftarrow c[j]$
+    \item \quad \quad \quad Si $j = n$ alors : \textit{// Ne pas dépasser n le dernier sommet}
+    \item \quad \quad \quad \quad $y \leftarrow c[1]$
+    \item \quad \quad \quad Sinon :
+    \item \quad \quad \quad \quad $y \leftarrow c[j+1]$
+    \item \quad \quad \quad $d_{actuelle} \leftarrow D[u, v] + D[x, y]$
+    \item \quad \quad \quad $d_{nouvelle} \leftarrow D[u, x] + D[v, y]$
+    \item \quad \quad \quad Si $d_{nouvelle} < d_{actuelle}$ alors : \textit{// le décroisement est intéressant}
+    \item \quad \quad \quad \quad $p \leftarrow i+1$
+    \item \quad \quad \quad \quad $q \leftarrow j$
+    \item \quad \quad \quad \quad Tant que $p < q$ faire : \textit{// On inversse le sens des sommet dans le cycle}
+    \item \quad \quad \quad \quad \quad Échanger $c[p]$ et $c[q]$
+    \item \quad \quad \quad \quad \quad $p \leftarrow p + 1$
+    \item \quad \quad \quad \quad \quad $q \leftarrow q - 1$
+    \item \quad \quad \quad \quad $\text{amélioration} \leftarrow \text{Vrai}$
+    \item Retourner $c$
+\end{enumerate}
+\end{tcolorbox}
 
 \subsection{Arbre couvrant de poids minimum (OptPrim)}
 

@@ -142,21 +142,19 @@ def inserer_dans_cycle(c, Q_i, Q_j, D, l):
 
     return c, l
 
-def ppp(points, Q=None, D=None):
+def ppp(points, D, Q=None):
     """
     Procédure PPP : construit un cycle hamiltonien en insérant itérativement le point le plus proche du cycle actuel.
     Args:
         points (list): Liste de tuples (x, y)
         Q (int, optional): Indice du point de départ. Si None, prend 0.
-        D (np.ndarray, optional): Matrice des distances. Si None, la calcule.
+        D (np.ndarray): Matrice des distances. Si None, la calcule.
     Returns:
         tuple: (c, l) cycle hamiltonien (liste d'indices), longueur du cycle
     """
     n = len(points)
     if n == 0:
         return [], 0.0
-    if D is None:
-        D = calculer_matrice_distances(points)
     if Q is None:
         Q = 0
     L = list(range(n))
@@ -167,5 +165,38 @@ def ppp(points, Q=None, D=None):
         Q_i, Q_j = trouver_couple_min(L, c, D)
         c, l = inserer_dans_cycle(c, Q_i, Q_j, D, l)
         L.remove(Q_i)
+    return c, l
+
+def optppp(c, D):
+    """
+    Procédure OptPPP : améliore le cycle fourni par PPP en décroisant les arêtes (2-opt).
+    Args:
+        c (list): Cycle hamiltonien initial (liste d'indices)
+        D (np.ndarray): Matrice des distances
+    Returns:
+        tuple: (c, l) cycle optimisé et sa nouvelle longueur
+    """
+    n = len(c)
+    amelioration = True
+    while amelioration:
+        amelioration = False
+        for i in range(n - 2):
+            for j in range(i + 2, n):
+                u = c[i]
+                v = c[i + 1]
+                x = c[j]
+                y = c[(j + 1) % n]
+                d_act = D[u, v] + D[x, y]
+                d_nouv = D[u, x] + D[v, y]
+                if d_nouv < d_act:
+                    # Inversion de la sous-séquence entre i+1 et j
+                    c[i+1:j+1] = c[i+1:j+1][::-1]
+                    amelioration = True
+    
+    # Recalcul de la longueur totale du cycle optimisé
+    l = 0.0
+    for k in range(n):
+        l += D[c[k], c[(k + 1) % n]]
+        
     return c, l
 

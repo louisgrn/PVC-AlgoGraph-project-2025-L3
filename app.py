@@ -58,14 +58,30 @@ def run_algo_process(algo_name, algo_func, points, queue):
         })
     except Exception as e:
         print(f"Error running {algo_name}: {e}")
+# Wrappers to handle distance matrix calculation and algorithm chaining
+def wrapper_ppp(points):
+    D = pvc_lib.calculer_matrice_distances(points)
+    return pvc_lib.ppp(points, D)
+
+def wrapper_optppp(points):
+    D = pvc_lib.calculer_matrice_distances(points)
+    # Initial solution using PPP
+    c_init, _ = pvc_lib.ppp(points, D)
+    # Optimization using 2-opt
+    return pvc_lib.optppp(c_init, D)
+
 # This allows easy addition/modification of algorithms
 ALGORITHMS = [
     {
         "id": "ppp",
         "name": "Point le Plus Proche (PPP)",
-        "func": pvc_lib.ppp
+        "func": wrapper_ppp
+    },
+    {
+        "id": "optppp",
+        "name": "PPP Optimisé (OptPPP)",
+        "func": wrapper_optppp
     }
-    # Add more algorithms here
 ]
 
 @app.route('/')
