@@ -88,7 +88,7 @@ def calculer_matrice_distances(points):
 
 def trouver_couple_min(L, c, D):
     """
-    Trouve le couple (Q_i, Q_j) tel que Q_i in L, Q_j in c et D[Q_i, Q_j] est minimale.
+    Trouve le couple (Q_i, Q_j) tel que Q_i dans L, Q_j dans c et D[Q_i, Q_j] est minimale.
     Args:
         L (list): Liste des indices des points non encore visités
         c (list): Liste des indices du cycle partiel actuel
