@@ -214,8 +214,8 @@ pip install requirement.txt
 \subsection{Point le Plus Proche Optimisé (OptPPP)}
 
 \begin{tcolorbox}[colback=darkWhite!75!white,colframe=black!30,left=5pt,right=5pt,top=5pt,bottom=5pt]
-\textbf{Algorithme : Procédure OptPPP} \\
-\textbf{Description :} Améliore le cycle fourni par PPP en décroisant les arêtes (2-opt) tant que cela réduit la distance totale. \\
+\textbf{Algorithme : Procédure Décroise} \\
+\textbf{Description :} Améliore un cycle en décroisant les arêtes tant que cela réduit la distance totale. \\
 \textbf{Vars :}
 \begin{itemize}
     \item $n$ : Entier (Nombre de points)
@@ -227,36 +227,50 @@ pip install requirement.txt
 \end{itemize}
 \textbf{Entrées :}
 \begin{itemize}
-    \item $c$ : Cycle hamiltonien initial (liste de points $P_1, \dots, P_n$)
+    \item $c$ : Cycle hamiltonien initial
     \item $D$ : Matrice des distances
 \end{itemize}
-\textbf{Sorties :} $c$ (cycle optimisé) \\
+\textbf{Sorties :} $c$ (cycle optimisé), $l$ (longueur) \\
 \textbf{Début :}
 \begin{enumerate}
     \item $n \leftarrow \text{taille}(c)$
     \item $\text{amélioration} \leftarrow \text{Vrai}$
-    \item Tant que $\text{amélioration}$ faire : \textit{// Répéter tant qu'on trouve une amélioration}
+    \item Tant que $\text{amélioration}$ faire :
     \item \quad $\text{amélioration} \leftarrow \text{Faux}$
-    \item \quad Pour $i$ allant de $1$ à $n-2$ faire : \textit{// Récupération de la première arête en provyant de la place pour la seconde}
-    \item \quad \quad Pour $j$ allant de $i+2$ à $n$ faire : \textit{// Récupération de la seconde arête apès la première mais sans être adjacent à la première}
+    \item \quad Pour $i$ allant de $1$ à $n-2$ faire :
+    \item \quad \quad Pour $j$ allant de $i+2$ à $n$ faire :
     \item \quad \quad \quad $u \leftarrow c[i]$
     \item \quad \quad \quad $v \leftarrow c[i+1]$
     \item \quad \quad \quad $x \leftarrow c[j]$
-    \item \quad \quad \quad Si $j = n$ alors : \textit{// Ne pas dépasser n le dernier sommet}
+    \item \quad \quad \quad Si $j = n$ alors :
     \item \quad \quad \quad \quad $y \leftarrow c[1]$
     \item \quad \quad \quad Sinon :
     \item \quad \quad \quad \quad $y \leftarrow c[j+1]$
     \item \quad \quad \quad $d_{actuelle} \leftarrow D[u, v] + D[x, y]$
     \item \quad \quad \quad $d_{nouvelle} \leftarrow D[u, x] + D[v, y]$
-    \item \quad \quad \quad Si $d_{nouvelle} < d_{actuelle}$ alors : \textit{// le décroisement est intéressant}
-    \item \quad \quad \quad \quad $p \leftarrow i+1$
-    \item \quad \quad \quad \quad $q \leftarrow j$
-    \item \quad \quad \quad \quad Tant que $p < q$ faire : \textit{// On inversse le sens des sommet dans le cycle}
-    \item \quad \quad \quad \quad \quad Échanger $c[p]$ et $c[q]$
-    \item \quad \quad \quad \quad \quad $p \leftarrow p + 1$
-    \item \quad \quad \quad \quad \quad $q \leftarrow q - 1$
+    \item \quad \quad \quad Si $d_{nouvelle} < d_{actuelle}$ alors :
+    \item \quad \quad \quad \quad $c[i+1 \dots j] \leftarrow \text{inverser}(c[i+1 \dots j])$
     \item \quad \quad \quad \quad $\text{amélioration} \leftarrow \text{Vrai}$
-    \item Retourner $c$
+    \item $l \leftarrow \text{CalculerLongueur}(c, D)$
+    \item Retourner $c, l$
+\end{enumerate}
+\end{tcolorbox}
+
+\vspace{5mm}
+
+\begin{tcolorbox}[colback=darkWhite!75!white,colframe=black!30,left=5pt,right=5pt,top=5pt,bottom=5pt]
+\textbf{Algorithme : Procédure OptPPP} \\
+\textbf{Description :} Wrapper pour l'algorithme de décroisement. \\
+\textbf{Vars :} Aucune \\
+\textbf{Entrées :}
+\begin{itemize}
+    \item $c$ : Cycle hamiltonien initial
+    \item $D$ : Matrice des distances
+\end{itemize}
+\textbf{Sorties :} $c$ (cycle optimisé), $l$ (longueur) \\
+\textbf{Début :}
+\begin{enumerate}
+    \item Retourner $\texttt{Décroise}(c, D)$
 \end{enumerate}
 \end{tcolorbox}
 
@@ -287,7 +301,7 @@ pip install requirement.txt
 \textbf{Entrées :}
 \begin{itemize}
     \item $D$ : Matrice des distances $n \times n$
-    \item $r0$ : Sommet de départ (par défaut 0)
+    \item $r0$ : Sommet de départ (par défaut 1)
 \end{itemize}
 \textbf{Sorties :}
 \begin{itemize}
@@ -298,15 +312,15 @@ pip install requirement.txt
     \item Initialiser $GraphePrim$ avec $n$ sommets
     \item $pres \leftarrow$ Tableau de booléens initialisé à \texttt{Vrai} (indique si un sommet est dans le tas)
     \item $GraphePrim.cle[r0] \leftarrow 0$
-    \item $GraphePrim.echanger(0, GraphePrim.noeudTas[r0])$ \textit{// Placer r0 à la racine}
+    \item $GraphePrim.echanger(1, GraphePrim.noeudTas[r0])$ \textit{// Placer r0 à la racine}
     \item Tant que $GraphePrim.tas$ n'est pas vide faire :
-    \item \quad $u \leftarrow GraphePrim.tas[0]$ \textit{// Extraire le min}
+    \item \quad $u \leftarrow GraphePrim.tas[1]$ \textit{// Extraire le min}
     \item \quad $pres[u] \leftarrow \texttt{Faux}$
-    \item \quad $GraphePrim.echanger(0, \text{taille}(tas) - 1)$
+    \item \quad $GraphePrim.echanger(1, \text{taille}(tas))$
     \item \quad Retirer le dernier élément de $GraphePrim.tas$
     \item \quad Si $GraphePrim.tas$ non vide alors :
-    \item \quad \quad $GraphePrim.versLeBas(0)$
-    \item \quad Pour chaque sommet $v$ de $0$ à $n-1$ faire :
+    \item \quad \quad $GraphePrim.versLeBas(1)$
+    \item \quad Pour chaque sommet $v$ de $1$ à $n$ faire :
     \item \quad \quad Si $pres[v]$ et $D[u, v] < GraphePrim.cle[v]$ alors :
     \item \quad \quad \quad $GraphePrim.cle[v] \leftarrow D[u, v]$
     \item \quad \quad \quad $GraphePrim.pred[v] \leftarrow u$
@@ -315,7 +329,140 @@ pip install requirement.txt
 \end{enumerate}
 \end{tcolorbox}
 
-\subsection{Évaluation et séparation progressive ("branch and bound") (HDS)}
+\vspace{5mm}
+
+\begin{tcolorbox}[colback=darkWhite!75!white,colframe=black!30,left=5pt,right=5pt,top=5pt,bottom=5pt]
+\textbf{Algorithme : PredToTree} \\
+\textbf{Description :} Convertit la liste des prédécesseurs en une structure d'arbre (dictionnaire d'adjacence). \\
+\textbf{Vars :}
+\begin{itemize}
+    \item $d$ : Dictionnaire (Liste d'adjacence)
+    \item $racine$ : Entier (Indice de la racine)
+    \item $i$ : Entier (Indice de boucle)
+\end{itemize}
+\textbf{Entrées :}
+\begin{itemize}
+    \item $pred$ : Liste des prédécesseurs
+\end{itemize}
+\textbf{Sorties :} $d$ (arbre), $racine$ \\
+\textbf{Début :}
+\begin{enumerate}
+    \item $d \leftarrow$ Dictionnaire vide
+    \item $racine \leftarrow -1$
+    \item Pour $i$ allant de $1$ à $\text{taille}(pred)$ faire :
+    \item \quad $d[i] \leftarrow$ Liste vide
+    \item \quad Si $pred[i]$ est \texttt{None} ou $-1$ alors :
+    \item \quad \quad $racine \leftarrow i$
+    \item Pour $i$ allant de $1$ à $\text{taille}(pred)$ faire :
+    \item \quad Si $pred[i]$ n'est pas \texttt{None} et $pred[i] \neq -1$ alors :
+    \item \quad \quad Ajouter $i$ à $d[pred[i]]$
+    \item Retourner $d, racine$
+\end{enumerate}
+\end{tcolorbox}
+
+\vspace{5mm}
+
+\begin{tcolorbox}[colback=darkWhite!75!white,colframe=black!30,left=5pt,right=5pt,top=5pt,bottom=5pt]
+\textbf{Algorithme : ParcoursPrefixe} \\
+\textbf{Description :} Effectue un parcours en profondeur (DFS) pour obtenir l'ordre de visite des sommets. \\
+\textbf{Vars :}
+\begin{itemize}
+    \item $stack$ : Pile d'entiers
+    \item $p$ : Tableau d'entiers (Marquage visite)
+    \item $p\_etoile$ : Liste d'entiers (Résultat)
+    \item $count$ : Entier
+    \item $lst\_voisin$ : Liste d'entiers
+    \item $rep$ : Booléen
+    \item $voisin$ : Entier
+\end{itemize}
+\textbf{Entrées :}
+\begin{itemize}
+    \item $d$ : Dictionnaire d'adjacence
+    \item $racine$ : Entier
+\end{itemize}
+\textbf{Sorties :} $p\_etoile$ (liste ordonnée) \\
+\textbf{Début :}
+\begin{enumerate}
+    \item $stack \leftarrow [racine]$
+    \item $p \leftarrow$ Tableau de zéros de taille $n$
+    \item $p\_etoile \leftarrow [racine]$
+    \item $p[racine] \leftarrow 1$
+    \item $count \leftarrow 2$
+    \item Tant que $stack$ n'est pas vide faire :
+    \item \quad $lst\_voisin \leftarrow d[\text{sommet}(stack)]$
+    \item \quad $rep \leftarrow \text{Faux}$
+    \item \quad Pour chaque $voisin$ dans $lst\_voisin$ faire :
+    \item \quad \quad Si $p[voisin] == 0$ alors :
+    \item \quad \quad \quad Empiler $voisin$ sur $stack$
+    \item \quad \quad \quad Ajouter $voisin$ à $p\_etoile$
+    \item \quad \quad \quad $p[voisin] \leftarrow count$
+    \item \quad \quad \quad $count \leftarrow count + 1$
+    \item \quad \quad \quad $rep \leftarrow \text{Vrai}$
+    \item \quad \quad \quad Sortir de la boucle Pour
+    \item \quad Si non $rep$ alors :
+    \item \quad \quad Dépiler de $stack$
+    \item Retourner $p\_etoile$
+\end{enumerate}
+\end{tcolorbox}
+
+\vspace{5mm}
+
+\begin{tcolorbox}[colback=darkWhite!75!white,colframe=black!30,left=5pt,right=5pt,top=5pt,bottom=5pt]
+\textbf{Algorithme : Procédure OptPrim} \\
+\textbf{Description :} Construit un cycle hamiltonien à partir de l'arbre couvrant minimal. \\
+\textbf{Vars :}
+\begin{itemize}
+    \item $pred$ : Liste d'entiers
+    \item $d$ : Dictionnaire
+    \item $racine$ : Entier
+    \item $c$ : Liste d'entiers
+    \item $l$ : Réel
+\end{itemize}
+\textbf{Entrées :}
+\begin{itemize}
+    \item $points$ : Liste de points
+    \item $D$ : Matrice des distances
+    \item $r0$ : Sommet de départ
+\end{itemize}
+\textbf{Sorties :} $c, l$ \\
+\textbf{Début :}
+\begin{enumerate}
+    \item Si $D$ est \texttt{None} alors :
+    \item \quad $D \leftarrow \texttt{CalculerMatriceDistances}(points)$
+    \item $pred \leftarrow \texttt{Prim}(D, r0)$
+    \item $(d, racine) \leftarrow \texttt{PredToTree}(pred)$
+    \item $c \leftarrow \texttt{ParcoursPrefixe}(d, racine)$
+    \item $l \leftarrow \texttt{CalculerLongueur}(c, D)$
+    \item Retourner $c, l$
+\end{enumerate}
+\end{tcolorbox}
+
+\subsection{OptPrim + Décroisé (OptOptPrim)}
+
+\begin{tcolorbox}[colback=darkWhite!75!white,colframe=black!30,left=5pt,right=5pt,top=5pt,bottom=5pt]
+\textbf{Algorithme : Procédure OptOptPrim} \\
+\textbf{Description :} Combine OptPrim et le décroisement. \\
+\textbf{Vars :}
+\begin{itemize}
+    \item $c_{init}$ : Liste d'entiers (Cycle initial)
+\end{itemize}
+\textbf{Entrées :}
+\begin{itemize}
+    \item $points$ : Liste de points
+    \item $D$ : Matrice des distances
+    \item $r0$ : Sommet de départ
+\end{itemize}
+\textbf{Sorties :} $c, l$ \\
+\textbf{Début :}
+\begin{enumerate}
+    \item Si $D$ est \texttt{None} alors :
+    \item \quad $D \leftarrow \texttt{CalculerMatriceDistances}(points)$
+    \item $(c_{init}, \_) \leftarrow \texttt{OptPrim}(points, D, r0)$
+    \item Retourner $\texttt{Décroise}(c_{init}, D)$
+\end{enumerate}
+\end{tcolorbox}
+
+\subsection{Évaluation et séparation progressive ("branch and bound") (HDS) pas fait }
 
 \textit{Section à compléter.}
 

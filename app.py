@@ -61,20 +61,19 @@ def run_algo_process(algo_name, algo_func, points, queue):
 # Wrappers to handle distance matrix calculation and algorithm chaining
 def wrapper_ppp(points):
     D = pvc_lib.calculer_matrice_distances(points)
-    return pvc_lib.ppp(points, D)
+    return pvc_lib.ppp(D)
 
 def wrapper_optppp(points):
     D = pvc_lib.calculer_matrice_distances(points)
-    # Initial solution using PPP
-    c_init, _ = pvc_lib.ppp(points, D)
-    # Optimization using 2-opt
-    return pvc_lib.optppp(c_init, D)
+    return pvc_lib.optppp(D)
 
 def wrapper_prim_mst(points):
-    return pvc_lib.optPrim(points)
+    D = pvc_lib.calculer_matrice_distances(points)
+    return pvc_lib.optPrim(D)
 
 def wrapper_opt_opt_prim(points):
-    return pvc_lib.optOptPrim(points)
+    D = pvc_lib.calculer_matrice_distances(points)
+    return pvc_lib.optOptPrim(D)
 
 # This allows easy addition/modification of algorithms
 ALGORITHMS = [

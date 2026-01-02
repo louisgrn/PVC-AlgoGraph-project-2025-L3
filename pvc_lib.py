@@ -142,21 +142,18 @@ def inserer_dans_cycle(c, Q_i, Q_j, D, l):
 
     return c, l
 
-def ppp(points, D, Q=None):
+def ppp(D, Q=0):
     """
     Procédure PPP : construit un cycle hamiltonien en insérant itérativement le point le plus proche du cycle actuel.
     Args:
-        points (list): Liste de tuples (x, y)
+        D (np.ndarray): Matrice des distances.
         Q (int, optional): Indice du point de départ. Si None, prend 0.
-        D (np.ndarray): Matrice des distances. Si None, la calcule.
     Returns:
         tuple: (c, l) cycle hamiltonien (liste d'indices), longueur du cycle
     """
-    n = len(points)
+    n = len(D)
     if n == 0:
         return [], 0.0
-    if Q is None:
-        Q = 0
     L = list(range(n))
     c = [Q]
     l = 0.0
@@ -202,15 +199,16 @@ def decroise(c, D):
 
     return c, l
 
-def optppp(c, D):
+def optppp(D, r0=0):
     """
     Procédure OptPPP : améliore le cycle fourni par PPP en décroisant les arêtes.
     Args:
-        c (list): Cycle hamiltonien initial (liste d'indices)
         D (np.ndarray): Matrice des distances
+        r0 (int, optional): Sommet de départ. Par défaut 0.
     Returns:
         tuple: (c, l) cycle optimisé et sa nouvelle longueur
     """
+    c, _ = ppp(D, r0)
     return decroise(c, D)
 
 #%% Prim optimisé (OptPrim) :
@@ -335,7 +333,7 @@ def pred_to_tree(pred):
     return d, racine
 
 
-def parcours_prefixe(d,racine):
+def parcours_prefixe(d, racine):
     """
     Effectue un parcours préfixe (DFS) de l'arbre pour obtenir l'ordre de visite des sommets.
     Args:
@@ -367,19 +365,15 @@ def parcours_prefixe(d,racine):
             stack.pop()
     return p_etoile
 
-def optPrim(points, D=None, r0=0):
+def optPrim(D, r0=0):
     """
     Procédure OptPrim : construit un cycle hamiltonien à partir de l'arbre couvrant minimal en utilisant un parcours préfixe.
     Args:
-        points (list): Liste de tuples (x, y)
-        D (np.ndarray, optional): Matrice des distances. Si None, elle est calculée.
+        D (np.ndarray): Matrice des distances.
         r0 (int, optional): Sommet de départ pour Prim. Par défaut 0.
     Returns:
         tuple: (c, l) cycle hamiltonien (liste d'indices), longueur du cycle
     """
-    if D is None:
-        D = calculer_matrice_distances(points)
-
     pred = prim(D, r0)
     d, racine = pred_to_tree(pred)
     c = parcours_prefixe(d, racine)
@@ -394,24 +388,20 @@ def optPrim(points, D=None, r0=0):
 
 #%% Prim + décroisé (OptOptPrim) :
 
-def optOptPrim(points, D=None, r0=0):
+def optOptPrim(D, r0=0):
     """
     Procédure OptOptPrim : combine OptPrim (MST + DFS) et décroisement.
     Génère un cycle initial avec l'heuristique de l'arbre couvrant minimum,
     puis l'améliore avec une recherche locale (décroisement).
 
     Args:
-        points (list): Liste de tuples (x, y)
-        D (np.ndarray, optional): Matrice des distances. Si None, elle est calculée.
+        D (np.ndarray): Matrice des distances.
         r0 (int, optional): Sommet de départ pour Prim. Par défaut 0.
     Returns:
         tuple: (c, l) cycle hamiltonien optimisé, longueur du cycle
     """
-    if D is None:
-        D = calculer_matrice_distances(points)
-
     # Étape 1: Obtenir le cycle initial via Prim + Parcours Préfixe
-    c_init, _ = optPrim(points, D, r0)
+    c_init, _ = optPrim(D, r0)
 
     # Étape 2: Optimiser ce cycle avec décroisement
     return decroise(c_init, D)
