@@ -20,6 +20,7 @@ def generer_points(n):
 
     # Liste de tuples (x, y)
     points = [(float(p[0]), float(p[1])) for p in points_array]
+    
     return points
 
 def lire_points_fichier(chemin_fichier):
@@ -33,22 +34,31 @@ def lire_points_fichier(chemin_fichier):
     Returns:
         list: Une liste de tuples (x, y).
     """
+    # Liste pour stocker les points
     points = []
+    # Lecture du fichier
     try:
         with open(chemin_fichier, 'r') as f:
+            # Parcourir chaque ligne du fichier
             for ligne in f:
+                # Nettoyer la ligne
                 ligne = ligne.strip()
+                # Ignorer les lignes vides
                 if ligne:
                     # Enlever les parenthèses et virgules
                     coords = ligne.replace('(', '').replace(')', '').split(',')
-
+                    
+                    # Vérifier qu'on a bien deux coordonnées
                     if len(coords) == 2:
+                        # Convertir en float et ajouter à la liste des points
                         try:
                             x = float(coords[0].strip())
                             y = float(coords[1].strip())
                             points.append((x, y))
                         except ValueError:
+                            # Gérer le cas où la conversion échoue et ignorer la ligne
                             print(f"Ignoré (format invalide) : {ligne}")
+    # Gérer le cas où le fichier n'existe pas
     except FileNotFoundError:
         print(f"Erreur : Le fichier '{chemin_fichier}' est introuvable.")
         return []
@@ -66,12 +76,15 @@ def calculer_matrice_distances(points):
     Returns:
         numpy.ndarray: Matrice n x n des distances.
     """
+    # Nombre de points
     n = len(points)
     # Initialisation de la matrice avec des zéros
     D = np.zeros((n, n))
 
+    # Calcul des distances euclidiennes
     for i in range(n):
         for j in range(n):
+            # si les points sont différents
             if i != j:
                 xi, yi = points[i]
                 xj, yj = points[j]
@@ -96,15 +109,20 @@ def trouver_couple_min(L, c, D):
     Returns:
         tuple: (Q_i, Q_j) indices
     """
+    # Initialisation des variables pour suivre la distance minimale et les indices correspondants
     d_min = float('inf')
     Q_i = None
     Q_j = None
+    # Parcourir tous les couples (u, v) avec u dans L et v dans c
     for u in L:
         for v in c:
+            # Vérifier si la distance D[u, v] est inférieure à la distance minimale actuelle
             if D[u, v] < d_min:
+                # Mettre à jour la distance minimale et les indices correspondants
                 d_min = D[u, v]
                 Q_i = u
                 Q_j = v
+
     return Q_i, Q_j
 
 def inserer_dans_cycle(c, Q_i, Q_j, D, l):
@@ -119,7 +137,9 @@ def inserer_dans_cycle(c, Q_i, Q_j, D, l):
     Returns:
         tuple: (c, l) cycle mis à jour et nouvelle longueur
     """
+    # Taille du cycle
     n = len(c)
+    # Index de Q_j dans le cycle
     idx_j = c.index(Q_j)
 
     # Insertion entre Q_j et le suivant (j+1)
@@ -132,7 +152,7 @@ def inserer_dans_cycle(c, Q_i, Q_j, D, l):
     Q_prev = c[idx_prev]
     cout_gauche = D[Q_prev, Q_i] + D[Q_i, Q_j] - D[Q_prev, Q_j]
 
-    # Choix du meilleur
+    # Choix du meilleur cout d'insertion
     if cout_droite <= cout_gauche:
         c.insert(idx_j + 1, Q_i)
         l += cout_droite
@@ -151,17 +171,28 @@ def ppp(D, Q=0):
     Returns:
         tuple: (c, l) cycle hamiltonien (liste d'indices), longueur du cycle
     """
+    # taille du graphe
     n = len(D)
     if n == 0:
         return [], 0.0
+    # Liste des points non encore visités
     L = list(range(n))
+    # Initialisation du cycle avec le point de départ Q
     c = [Q]
+    # Longueur initiale du cycle
     l = 0.0
+    # Retirer Q de la liste des points non visités
     L.remove(Q)
+
+    # Boucle principale d'insertion tant qu'il reste des points à insérer
     while L != []:
+        # trouver le couple (Q_i, Q_j) minimisant la distance
         Q_i, Q_j = trouver_couple_min(L, c, D)
+        # insérer Q_i dans le cycle c et mettre à jour la longueur
         c, l = inserer_dans_cycle(c, Q_i, Q_j, D, l)
+        # retirer Q_i de L
         L.remove(Q_i)
+
     return c, l
 
 #%% Point le Plus Proche optimisé (OptPPP) :
@@ -175,18 +206,26 @@ def decroise(c, D):
     Returns:
         tuple: (c, l) cycle optimisé et sa nouvelle longueur
     """
+    # taille du cycle
     n = len(c)
     amelioration = True
+    # Boucle jusqu'à ce qu'il n'y ait plus d'amélioration
     while amelioration:
         amelioration = False
+        # Parcourir toutes les paires d'arêtes non adjacentes
         for i in range(n - 2):
+            # j doit être au moins i+2 pour éviter les arêtes adjacentes
             for j in range(i + 2, n):
+                # u et v sont les extrémités de la première arête
                 u = c[i]
                 v = c[i + 1]
+                # x et y sont les extrémités de la deuxième arête
                 x = c[j]
                 y = c[(j + 1) % n]
+                # calcul des distances actuelles et nouvelles
                 d_act = D[u, v] + D[x, y]
                 d_nouv = D[u, x] + D[v, y]
+                # Si le décroisement améliore la longueur du cycle
                 if d_nouv < d_act:
                     # Inversion de la sous-séquence entre i+1 et j
                     c[i+1:j+1] = c[i+1:j+1][::-1]
@@ -208,7 +247,9 @@ def optppp(D, r0=0):
     Returns:
         tuple: (c, l) cycle optimisé et sa nouvelle longueur
     """
+    # Obtenir le cycle initial via PPP
     c, _ = ppp(D, r0)
+    # Décroisement
     return decroise(c, D)
 
 #%% Prim optimisé (OptPrim) :
@@ -254,8 +295,11 @@ class GraphePrim:
         Args:
             i (int): Indice de l'élément à faire remonter.
         """
+        # Remonter tant que l'élément a une priorité inférieure à son parent
         while i > 0 and self.priorite(i) < self.priorite((i - 1) // 2):
+            # Échanger avec le parent
             self.echanger(i, (i - 1) // 2)
+            # Mettre à jour l'indice pour continuer à remonter
             i = (i - 1) // 2
 
     def versLeBas(self, i):
@@ -264,14 +308,23 @@ class GraphePrim:
         Args:
             i (int): Indice de l'élément à faire descendre.
         """
+        # Indice du fils gauche
         s = 2 * i + 1
+        # Descendre tant que l'élément a une priorité supérieure à l'un de ses enfants
         while s < len(self.tas):
+            # Trouver l'enfant avec la plus petite priorité en comparant les deux fils et si c'est le droit
             if s + 1 < len(self.tas) and self.priorite(s + 1) < self.priorite(s):
+                # Prendre le fils droit
                 s += 1
+            # Si l'élément courant a une priorité supérieure à son enfant
             if self.priorite(i) > self.priorite(s):
+                # echanger et continuer à descendre
                 self.echanger(i, s)
+                # Mettre à jour l'indice courant de l'elément à descendre
                 i = s
+                # Mettre à jour l'indice avec le fils gauche
                 s = 2 * i + 1
+            # Sinon, la propriété de tas est respectée
             else:
                 break
 
@@ -293,20 +346,29 @@ def prim(D, r0=0):
     # Placer r0 à la racine du tas
     graphe.echanger(0, graphe.noeudTas[r0])
 
+    # Boucle principale de Prim
     while len(graphe.tas) > 0:
+        # Extraire le sommet u de clé minimale
         u = graphe.tas[0]
+        # Marquer u comme inclus dans l'arbre
         pres[u] = False
         
+        # Retirer u du tas
         graphe.echanger(0, len(graphe.tas) - 1)
         graphe.tas.pop()
         
+        # Reajuster le tas
         if len(graphe.tas) > 0:
             graphe.versLeBas(0)
 
+        # Mettre à jour les clés et prédécesseurs des sommets adjacents
         for v in range(n):
+            # Si v est encore dans le tas et l'arête (u, v) est plus petite que la clé actuelle
             if pres[v] and D[u, v] < graphe.cle[v]:
+                # Mettre à jour la clé et le prédécesseur
                 graphe.cle[v] = D[u, v]
                 graphe.pred[v] = u
+                # Faire remonter v dans le tas
                 graphe.versLeHaut(graphe.noeudTas[v])
         
     return graphe.pred
@@ -321,13 +383,19 @@ def pred_to_tree(pred):
     """
     d = {}
     racine = -1
+    # Initialisation du dictionnaire d'adjacence
     for i in range(len(pred)):
+        # Chaque nœud a une liste vide au départ
         d[i] = []
+        # Trouver la racine
         if pred[i] is None or pred[i] == -1:
             racine = i
 
+    # Remplir le dictionnaire d'adjacence
     for i in range(len(pred)):
+        # Ajouter i comme enfant de son prédécesseur
         if pred[i] is not None and pred[i] != -1:
+            # Ajouter i à la liste des enfants de pred[i]
             d[pred[i]].append(i)
 
     return d, racine
@@ -342,27 +410,43 @@ def parcours_prefixe(d, racine):
     Returns:
         list: Liste des sommets dans l'ordre du parcours préfixe.
     """
+    # Initialisation de la pile avec la racine
     stack = [racine]
+    # Marquage des sommets visités en lui attribuant l'ordre de visite
     p = [0] * len(d)
+    # Liste du parcours préfixe
     p_etoile = [racine]
+    # Marquer la racine comme visitée
     p[racine] = 1
     count = 2
+
+    # Parcours prefixe
     while len(stack) > 0 :
+        # Récupérer le sommet au sommet de la pile
         lst_voisin = d[stack[len(stack) -1]]
         rep = False
 
+        # Parcourir les voisins
         for i in range(len(lst_voisin)):
+            # voisin courant de i
             voisin = lst_voisin[i]
+            # Si le voisin n'a pas été visité
             if p[voisin] ==0 :
+                # L'ajouter à la pile
                 stack.append(voisin)
+                # L'ajouter au parcours préfixe
                 p_etoile.append(voisin)
+                # Marquer comme visité en lui attribuant l'ordre de visite
                 p[voisin] = count
                 count +=1
+                # Indiquer qu'on a trouvé un voisin non visité
                 rep = True
                 break
 
+        # Si aucun voisin non visité n'a été trouvé, dépiler
         if not rep :
             stack.pop()
+
     return p_etoile
 
 def optPrim(D, r0=0):
@@ -374,8 +458,11 @@ def optPrim(D, r0=0):
     Returns:
         tuple: (c, l) cycle hamiltonien (liste d'indices), longueur du cycle
     """
+    # Obtenir l'arbre couvrant minimal via Prim
     pred = prim(D, r0)
+    # Convertir les prédécesseurs en arbre
     d, racine = pred_to_tree(pred)
+    # Obtenir le cycle via un parcours préfixe de l'arbre
     c = parcours_prefixe(d, racine)
 
     # Calcul de la longueur totale du cycle
@@ -400,8 +487,7 @@ def optOptPrim(D, r0=0):
     Returns:
         tuple: (c, l) cycle hamiltonien optimisé, longueur du cycle
     """
-    # Étape 1: Obtenir le cycle initial via Prim + Parcours Préfixe
+    # Obtenir le cycle initial via Prim + Parcours Préfixe
     c_init, _ = optPrim(D, r0)
-
-    # Étape 2: Optimiser ce cycle avec décroisement
+    # Décroisement
     return decroise(c_init, D)
