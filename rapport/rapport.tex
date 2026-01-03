@@ -135,12 +135,12 @@ pip install requirement.txt
 \end{itemize}
 \textbf{Début :}
 \begin{enumerate}
-    \item $c \leftarrow$ cycle trivial composé du seul point $Q$
+    \item $c \leftarrow$ cycle trivial composé du seul point $Q$ \textit{// Initialisation du cycle}
     \item $l \leftarrow 0$
     \item Retirer $Q$ de $L$
-    \item Tant que $L$ n'est pas vide faire :
-    \item \quad $(Q_i, Q_j) \leftarrow \texttt{TrouverCoupleMin}(L, c, D)$
-    \item \quad $(c, l) \leftarrow \texttt{InsérerDansCycle}(c, Q_i, Q_j, D, l)$
+    \item Tant que $L$ n'est pas vide faire : \textit{// Boucle principale d'insertion}
+    \item \quad $(Q_i, Q_j) \leftarrow \texttt{TrouverCoupleMin}(L, c, D)$ \textit{// Trouver le couple minimisant la distance}
+    \item \quad $(c, l) \leftarrow \texttt{InsérerDansCycle}(c, Q_i, Q_j, D, l)$ \textit{// Insérer et mettre à jour}
     \item \quad Retirer $Q_i$ de $L$
     \item Retourner $c, l$
 \end{enumerate}
@@ -169,9 +169,9 @@ pip install requirement.txt
 \begin{enumerate}
     \item Soit $Q_{next}$ le successeur de $Q_j$ dans $c$
     \item Soit $Q_{prev}$ le prédécesseur de $Q_j$ dans $c$
-    \item $\text{coût}_{\text{droite}} \leftarrow D[Q_j, Q_i] + D[Q_i, Q_{next}] - D[Q_j, Q_{next}]$
-    \item $\text{coût}_{\text{gauche}} \leftarrow D[Q_{prev}, Q_i] + D[Q_i, Q_j] - D[Q_{prev}, Q_j]$
-    \item Si $\text{coût}_{\text{droite}} \leq \text{coût}_{\text{gauche}}$ alors :
+    \item $\text{coût}_{\text{droite}} \leftarrow D[Q_j, Q_i] + D[Q_i, Q_{next}] - D[Q_j, Q_{next}]$ \textit{// Coût insertion droite}
+    \item $\text{coût}_{\text{gauche}} \leftarrow D[Q_{prev}, Q_i] + D[Q_i, Q_j] - D[Q_{prev}, Q_j]$ \textit{// Coût insertion gauche}
+    \item Si $\text{coût}_{\text{droite}} \leq \text{coût}_{\text{gauche}}$ alors : \textit{// Choix du meilleur coût}
     \item \quad Insérer $Q_i$ entre $Q_j$ et $Q_{next}$ dans $c$
     \item \quad $l \leftarrow l + \text{coût}_{\text{droite}}$
     \item Sinon :
@@ -202,9 +202,9 @@ pip install requirement.txt
     \item $d_{min} \leftarrow \infty$
     \item $Q_i \leftarrow \text{vide}$
     \item $Q_j \leftarrow \text{vide}$
-    \item Pour chaque point $u$ appartenant à $L$ faire :
-    \item \quad Pour chaque point $v$ appartenant à $c$ faire :
-    \item \quad \quad Si $D[u, v] < d_{min}$ alors :
+    \item Pour chaque point $u$ appartenant à $L$ faire : \textit{// Parcourir les points non visités}
+    \item \quad Pour chaque point $v$ appartenant à $c$ faire : \textit{// Parcourir les points du cycle}
+    \item \quad \quad Si $D[u, v] < d_{min}$ alors : \textit{// Vérifier si distance minimale}
     \item \quad \quad \quad $d_{min} \leftarrow D[u, v]$
     \item \quad \quad \quad $Q_i \leftarrow u$
     \item \quad \quad \quad $Q_j \leftarrow v$
@@ -335,9 +335,9 @@ def ppp(D, Q=0):
 \begin{enumerate}
     \item $n \leftarrow \text{taille}(c)$
     \item $\text{amélioration} \leftarrow \text{Vrai}$
-    \item Tant que $\text{amélioration}$ faire :
+    \item Tant que $\text{amélioration}$ faire : \textit{// Boucle jusqu'à stabilité}
     \item \quad $\text{amélioration} \leftarrow \text{Faux}$
-    \item \quad Pour $i$ allant de $1$ à $n-2$ faire :
+    \item \quad Pour $i$ allant de $1$ à $n-2$ faire : \textit{// Parcourir les paires d'arêtes}
     \item \quad \quad Pour $j$ allant de $i+2$ à $n$ faire :
     \item \quad \quad \quad $u \leftarrow c[i]$
     \item \quad \quad \quad $v \leftarrow c[i+1]$
@@ -348,10 +348,10 @@ def ppp(D, Q=0):
     \item \quad \quad \quad \quad $y \leftarrow c[j+1]$
     \item \quad \quad \quad $d_{actuelle} \leftarrow D[u, v] + D[x, y]$
     \item \quad \quad \quad $d_{nouvelle} \leftarrow D[u, x] + D[v, y]$
-    \item \quad \quad \quad Si $d_{nouvelle} < d_{actuelle}$ alors :
-    \item \quad \quad \quad \quad $c[i+1 \dots j] \leftarrow \text{inverser}(c[i+1 \dots j])$
+    \item \quad \quad \quad Si $d_{nouvelle} < d_{actuelle}$ alors : \textit{// Si amélioration trouvée}
+    \item \quad \quad \quad \quad $c[i+1 \dots j] \leftarrow \text{inverser}(c[i+1 \dots j])$ \textit{// Inversion sous-séquence}
     \item \quad \quad \quad \quad $\text{amélioration} \leftarrow \text{Vrai}$
-    \item $l \leftarrow \text{CalculerLongueur}(c, D)$
+    \item $l \leftarrow \text{CalculerLongueur}(c, D)$ \textit{// Recalcul longueur}
     \item Retourner $c, l$
 \end{enumerate}
 \end{tcolorbox}
@@ -469,20 +469,20 @@ def optppp(D, r0=0):
 \begin{enumerate}
     \item Initialiser $GraphePrim$ avec $n$ sommets
     \item $pres \leftarrow$ Tableau de booléens initialisé à \texttt{Vrai} (indique si un sommet est dans le tas)
-    \item $GraphePrim.cle[r0] \leftarrow 0$
+    \item $GraphePrim.cle[r0] \leftarrow 0$ \textit{// Initialiser clé départ}
     \item $GraphePrim.echanger(1, GraphePrim.noeudTas[r0])$ \textit{// Placer r0 à la racine}
-    \item Tant que $GraphePrim.tas$ n'est pas vide faire :
+    \item Tant que $GraphePrim.tas$ n'est pas vide faire : \textit{// Boucle principale}
     \item \quad $u \leftarrow GraphePrim.tas[1]$ \textit{// Extraire le min}
-    \item \quad $pres[u] \leftarrow \texttt{Faux}$
+    \item \quad $pres[u] \leftarrow \texttt{Faux}$ \textit{// Marquer comme visité}
     \item \quad $GraphePrim.echanger(1, \text{taille}(tas))$
     \item \quad Retirer le dernier élément de $GraphePrim.tas$
     \item \quad Si $GraphePrim.tas$ non vide alors :
-    \item \quad \quad $GraphePrim.versLeBas(1)$
-    \item \quad Pour chaque sommet $v$ de $1$ à $n$ faire :
+    \item \quad \quad $GraphePrim.versLeBas(1)$ \textit{// Réajuster le tas}
+    \item \quad Pour chaque sommet $v$ de $1$ à $n$ faire : \textit{// Mettre à jour voisins}
     \item \quad \quad Si $pres[v]$ et $D[u, v] < GraphePrim.cle[v]$ alors :
     \item \quad \quad \quad $GraphePrim.cle[v] \leftarrow D[u, v]$
     \item \quad \quad \quad $GraphePrim.pred[v] \leftarrow u$
-    \item \quad \quad \quad $GraphePrim.versLeHaut(GraphePrim.noeudTas[v])$
+    \item \quad \quad \quad $GraphePrim.versLeHaut(GraphePrim.noeudTas[v])$ \textit{// Remonter dans le tas}
     \item Retourner $GraphePrim.pred$
 \end{enumerate}
 \end{tcolorbox}
@@ -507,13 +507,13 @@ def optppp(D, r0=0):
 \begin{enumerate}
     \item $d \leftarrow$ Dictionnaire vide
     \item $racine \leftarrow -1$
-    \item Pour $i$ allant de $1$ à $\text{taille}(pred)$ faire :
+    \item Pour $i$ allant de $1$ à $\text{taille}(pred)$ faire : \textit{// Initialisation}
     \item \quad $d[i] \leftarrow$ Liste vide
-    \item \quad Si $pred[i]$ est \texttt{None} ou $-1$ alors :
+    \item \quad Si $pred[i]$ est \texttt{None} ou $-1$ alors : \textit{// Trouver racine}
     \item \quad \quad $racine \leftarrow i$
-    \item Pour $i$ allant de $1$ à $\text{taille}(pred)$ faire :
+    \item Pour $i$ allant de $1$ à $\text{taille}(pred)$ faire : \textit{// Remplir adjacence}
     \item \quad Si $pred[i]$ n'est pas \texttt{None} et $pred[i] \neq -1$ alors :
-    \item \quad \quad Ajouter $i$ à $d[pred[i]]$
+    \item \quad \quad Ajouter $i$ à $d[pred[i]]$ \textit{// Ajouter enfant}
     \item Retourner $d, racine$
 \end{enumerate}
 \end{tcolorbox}
@@ -541,23 +541,23 @@ def optppp(D, r0=0):
 \textbf{Sorties :} $p\_etoile$ (liste ordonnée) \\
 \textbf{Début :}
 \begin{enumerate}
-    \item $stack \leftarrow [racine]$
+    \item $stack \leftarrow [racine]$ \textit{// Initialisation pile}
     \item $p \leftarrow$ Tableau de zéros de taille $n$
     \item $p\_etoile \leftarrow [racine]$
-    \item $p[racine] \leftarrow 1$
+    \item $p[racine] \leftarrow 1$ \textit{// Marquer racine}
     \item $count \leftarrow 2$
-    \item Tant que $stack$ n'est pas vide faire :
+    \item Tant que $stack$ n'est pas vide faire : \textit{// Parcours}
     \item \quad $lst\_voisin \leftarrow d[\text{sommet}(stack)]$
     \item \quad $rep \leftarrow \text{Faux}$
-    \item \quad Pour chaque $voisin$ dans $lst\_voisin$ faire :
-    \item \quad \quad Si $p[voisin] == 0$ alors :
+    \item \quad Pour chaque $voisin$ dans $lst\_voisin$ faire : \textit{// Parcourir voisins}
+    \item \quad \quad Si $p[voisin] == 0$ alors : \textit{// Si non visité}
     \item \quad \quad \quad Empiler $voisin$ sur $stack$
     \item \quad \quad \quad Ajouter $voisin$ à $p\_etoile$
     \item \quad \quad \quad $p[voisin] \leftarrow count$
     \item \quad \quad \quad $count \leftarrow count + 1$
     \item \quad \quad \quad $rep \leftarrow \text{Vrai}$
     \item \quad \quad \quad Sortir de la boucle Pour
-    \item \quad Si non $rep$ alors :
+    \item \quad Si non $rep$ alors : \textit{// Si aucun voisin non visité}
     \item \quad \quad Dépiler de $stack$
     \item Retourner $p\_etoile$
 \end{enumerate}
@@ -587,10 +587,10 @@ def optppp(D, r0=0):
 \begin{enumerate}
     \item Si $D$ est \texttt{None} alors :
     \item \quad $D \leftarrow \texttt{CalculerMatriceDistances}(points)$
-    \item $pred \leftarrow \texttt{Prim}(D, r0)$
-    \item $(d, racine) \leftarrow \texttt{PredToTree}(pred)$
-    \item $c \leftarrow \texttt{ParcoursPrefixe}(d, racine)$
-    \item $l \leftarrow \texttt{CalculerLongueur}(c, D)$
+    \item $pred \leftarrow \texttt{Prim}(D, r0)$ \textit{// Arbre couvrant minimal}
+    \item $(d, racine) \leftarrow \texttt{PredToTree}(pred)$ \textit{// Conversion en arbre}
+    \item $c \leftarrow \texttt{ParcoursPrefixe}(d, racine)$ \textit{// Cycle via parcours}
+    \item $l \leftarrow \texttt{CalculerLongueur}(c, D)$ \textit{// Calcul longueur}
     \item Retourner $c, l$
 \end{enumerate}
 \end{tcolorbox}
@@ -838,8 +838,8 @@ def optPrim(D, r0=0):
 \begin{enumerate}
     \item Si $D$ est \texttt{None} alors :
     \item \quad $D \leftarrow \texttt{CalculerMatriceDistances}(points)$
-    \item $(c_{init}, \_) \leftarrow \texttt{OptPrim}(points, D, r0)$
-    \item Retourner $\texttt{Décroise}(c_{init}, D)$
+    \item $(c_{init}, \_) \leftarrow \texttt{OptPrim}(points, D, r0)$ \textit{// Cycle initial (Prim + DFS)}
+    \item Retourner $\texttt{Décroise}(c_{init}, D)$ \textit{// Amélioration par décroisement}
 \end{enumerate}
 \end{tcolorbox}
 
@@ -906,12 +906,12 @@ def optOptPrim(D, r0=0):
     \item $debut \leftarrow noeud.chemin[1]$
     \item $fin \leftarrow noeud.chemin[\text{dernier}]$
     \item Pour chaque sommet $i$ du graphe faire :
-    \item \quad Si $i$ est interne au chemin alors :
+    \item \quad Si $i$ est interne au chemin alors : \textit{// Cas 1 : Sommet interne}
     \item \quad \quad Ajouter à $somme$ les distances vers ses deux voisins dans le chemin
-    \item \quad Sinon si $i$ est une extrémité ($debut$ ou $fin$) alors :
+    \item \quad Sinon si $i$ est une extrémité ($debut$ ou $fin$) alors : \textit{// Cas 2 : Extrémité}
     \item \quad \quad Ajouter à $somme$ la distance vers son voisin dans le chemin
     \item \quad \quad Ajouter à $somme$ la distance minimale vers un sommet non connecté à $i$ dans le chemin
-    \item \quad Sinon ($i$ hors du chemin) :
+    \item \quad Sinon ($i$ hors du chemin) : \textit{// Cas 3 : Hors chemin}
     \item \quad \quad Ajouter à $somme$ les deux plus petites distances incidentes à $i$
     \item Retourner $somme / 2$
 \end{enumerate}
@@ -939,20 +939,20 @@ def optOptPrim(D, r0=0):
 \begin{enumerate}
     \item $c \leftarrow []$, $l \leftarrow \infty$
     \item $tas \leftarrow \text{NouveauTas}()$
-    \item $tas.\text{insere}(\text{NouveauNoeud}([0], 0, D))$
+    \item $tas.\text{insere}(\text{NouveauNoeud}([0], 0, D))$ \textit{// Initialisation avec racine}
     \item Tant que $tas$ n'est pas vide faire :
-    \item \quad $noeud\_courant \leftarrow tas.\text{extraire\_min}()$
-    \item \quad Si $noeud\_courant.borne \geq l$ alors :
+    \item \quad $noeud\_courant \leftarrow tas.\text{extraire\_min}()$ \textit{// Extraire min borne}
+    \item \quad Si $noeud\_courant.borne \geq l$ alors : \textit{// Élagage}
     \item \quad \quad Continuer (élagage)
-    \item \quad Si $\text{taille}(noeud\_courant.chemin) == n$ alors :
+    \item \quad Si $\text{taille}(noeud\_courant.chemin) == n$ alors : \textit{// Chemin complet}
     \item \quad \quad $cout\_total \leftarrow noeud\_courant.cout\_actuel + D[noeud\_courant.dernier, noeud\_courant.chemin[1]]$
-    \item \quad \quad Si $cout\_total < l$ alors :
+    \item \quad \quad Si $cout\_total < l$ alors : \textit{// Meilleure solution ?}
     \item \quad \quad \quad $l \leftarrow cout\_total$
     \item \quad \quad \quad $c \leftarrow noeud\_courant.chemin + [noeud\_courant.chemin[1]]$
-    \item \quad Sinon :
+    \item \quad Sinon : \textit{// Brancher}
     \item \quad \quad Pour chaque sommet $i$ non dans $noeud\_courant.chemin$ faire :
     \item \quad \quad \quad Créer $nouveau\_noeud$ en ajoutant $i$ au chemin
-    \item \quad \quad \quad $tas.\text{insere}(nouveau\_noeud)$
+    \item \quad \quad \quad $tas.\text{insere}(nouveau\_noeud)$ \textit{// Insérer successeur}
     \item Retourner $c, l$
 \end{enumerate}
 \end{tcolorbox}
