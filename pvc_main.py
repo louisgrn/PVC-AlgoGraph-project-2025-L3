@@ -177,10 +177,10 @@ def plot_average_length(result, labels, path=None):
 
 
 if __name__ == "__main__":
-    number_of_tests = 100
-    number_of_sommet = 200
-    list_func = [pvc.ppp, pvc.optppp, pvc.optPrim, pvc.optOptPrim]
-    labels = ["PPP", "OptPPP", "OptPrim", "OptOptPrim"]
+    number_of_tests = 10
+    number_of_sommet = 10
+    list_func = [pvc.ppp, pvc.optppp, pvc.optPrim, pvc.optOptPrim, pvc.hds]
+    labels = ["PPP", "OptPPP", "OptPrim", "OptOptPrim", "HDS"]
     spinner = Spinner("Execution en cours...", delay=0.1)
     try:
         spinner.start()

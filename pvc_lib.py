@@ -624,6 +624,11 @@ class Tas:
             self.__versLeBas(0)
         return min_noeud
     
+    def priorite(self, i):
+        return self.tas[i].borne
+
+    def echanger(self, i, j):
+        self.tas[i], self.tas[j] = self.tas[j], self.tas[i]
 
 def hds(D):
     """
@@ -636,6 +641,14 @@ def hds(D):
     c = []
     l = float('inf')
     n = len(D)
+
+    if n < 3:
+        if n == 0:
+            return [], 0
+        if n == 1:
+            return [0, 0], 0
+        if n == 2:
+            return [0, 1, 0], D[0, 1] * 2
 
     tas = Tas()
     # Initialisation du tas avec le noeud racine

@@ -76,6 +76,10 @@ def wrapper_opt_opt_prim(points):
     D = pvc_lib.calculer_matrice_distances(points)
     return pvc_lib.optOptPrim(D)
 
+def wrapper_hds(points):
+    D = pvc_lib.calculer_matrice_distances(points)
+    return pvc_lib.hds(D)
+
 # This allows easy addition/modification of algorithms
 ALGORITHMS = [
     {
@@ -97,6 +101,11 @@ ALGORITHMS = [
         "id": "optoptprim",
         "name": "OptPrim + Décroisé (OptOptPrim)",
         "func": wrapper_opt_opt_prim
+    },
+    {
+        "id": "hds",
+        "name": "Branch and Bound (HDS)",
+        "func": wrapper_hds
     }
 ]
 
@@ -247,6 +256,13 @@ def run_stats():
         # Use pvc_lib functions directly (they expect distance matrix D)
         list_func = [pvc_lib.ppp, pvc_lib.optppp, pvc_lib.optPrim, pvc_lib.optOptPrim]
         labels = ["PPP", "OptPPP", "OptPrim", "OptOptPrim"]
+
+        # Only include HDS if the problem size is small enough to avoid timeout
+        # HDS is exponential O(n!), so we limit it to small graphs (e.g., <= 12 vertices)
+        # num_tests here is used as the max vertices for the first plot (exec_all_from_1_to_n_sommet)
+        if num_vertices <= 12 and num_tests <= 12:
+            list_func.append(pvc_lib.hds)
+            labels.append("HDS")
         
         # Generate results
         results_1_n = pvc_main.exec_all_from_1_to_n_sommet(num_tests, list_func)
@@ -285,13 +301,22 @@ def run_stats():
         pct_optppp_vs_ppp = ((optppp_length - ppp_length) / ppp_length) * 100
         pct_optprim_vs_optppp = ((optprim_length - optppp_length) / optppp_length) * 100
         
+        comparisons = {
+            'optppp_vs_ppp': round(pct_optppp_vs_ppp, 2),
+            'optprim_vs_optppp': round(pct_optprim_vs_optppp, 2)
+        }
+
+        if "HDS" in labels:
+            hds_idx = labels.index("HDS")
+            hds_length = sum(results[hds_idx][1]) / len(results[hds_idx][1])
+            # Compare OptPrim vs HDS (how far from optimal)
+            pct_optprim_vs_hds = ((optprim_length - hds_length) / hds_length) * 100
+            comparisons['optprim_vs_hds'] = round(pct_optprim_vs_hds, 2)
+
         return jsonify({
             'status': 'success',
             'stats': stats_data,
-            'comparisons': {
-                'optppp_vs_ppp': round(pct_optppp_vs_ppp, 2),
-                'optprim_vs_optppp': round(pct_optprim_vs_optppp, 2)
-            },
+            'comparisons': comparisons,
             'images': {
                 'execution_times_and_lengths': '/img/execution_times_and_lengths.png',
                 'average_time': '/img/average_time.png',

@@ -21,6 +21,9 @@
                             <div class="form-text">Maximum: {{ max_vertices }}</div>
                         </div>
                     </div>
+                    <div class="alert alert-info mt-3 py-2">
+                        <small><i class="fas fa-info-circle me-2"></i>L'algorithme HDS (Branch and Bound) ne sera inclus que si le nombre de tests et de sommets sont &le; 12.</small>
+                    </div>
                     <div class="d-grid gap-2 mt-3">
                         <button type="button" onclick="runStats()" class="btn btn-primary">
                             <i class="fas fa-play me-2"></i>Générer les statistiques
@@ -171,6 +174,12 @@ function displayResults(data) {
     const li2 = document.createElement('li');
     li2.textContent = `OptPrim vs OptPPP: ${data.comparisons.optprim_vs_optppp > 0 ? '+' : ''}${data.comparisons.optprim_vs_optppp}%`;
     comparisonsList.appendChild(li2);
+
+    if (data.comparisons.optprim_vs_hds !== undefined) {
+        const li3 = document.createElement('li');
+        li3.textContent = `OptPrim vs HDS (Optimal): ${data.comparisons.optprim_vs_hds > 0 ? '+' : ''}${data.comparisons.optprim_vs_hds}%`;
+        comparisonsList.appendChild(li3);
+    }
     
     // Display images with timestamp to avoid cache
     const timestamp = new Date().getTime();
