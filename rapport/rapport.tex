@@ -224,15 +224,20 @@ def trouver_couple_min(L, c, D):
     Returns:
         tuple: (Q_i, Q_j) indices
     """
+    # Initialisation des variables pour suivre la distance minimale et les indices correspondants
     d_min = float('inf')
     Q_i = None
     Q_j = None
+    # Parcourir tous les couples (u, v) avec u dans L et v dans c
     for u in L:
         for v in c:
+            # Vérifier si la distance D[u, v] est inférieure à la distance minimale actuelle
             if D[u, v] < d_min:
+                # Mettre à jour la distance minimale et les indices correspondants
                 d_min = D[u, v]
                 Q_i = u
                 Q_j = v
+
     return Q_i, Q_j
 
 def inserer_dans_cycle(c, Q_i, Q_j, D, l):
@@ -247,7 +252,9 @@ def inserer_dans_cycle(c, Q_i, Q_j, D, l):
     Returns:
         tuple: (c, l) cycle mis à jour et nouvelle longueur
     """
+    # Taille du cycle
     n = len(c)
+    # Index de Q_j dans le cycle
     idx_j = c.index(Q_j)
 
     # Insertion entre Q_j et le suivant (j+1)
@@ -260,7 +267,7 @@ def inserer_dans_cycle(c, Q_i, Q_j, D, l):
     Q_prev = c[idx_prev]
     cout_gauche = D[Q_prev, Q_i] + D[Q_i, Q_j] - D[Q_prev, Q_j]
 
-    # Choix du meilleur
+    # Choix du meilleur cout d'insertion
     if cout_droite <= cout_gauche:
         c.insert(idx_j + 1, Q_i)
         l += cout_droite
@@ -279,17 +286,28 @@ def ppp(D, Q=0):
     Returns:
         tuple: (c, l) cycle hamiltonien (liste d'indices), longueur du cycle
     """
+    # taille du graphe
     n = len(D)
     if n == 0:
         return [], 0.0
+    # Liste des points non encore visités
     L = list(range(n))
+    # Initialisation du cycle avec le point de départ Q
     c = [Q]
+    # Longueur initiale du cycle
     l = 0.0
+    # Retirer Q de la liste des points non visités
     L.remove(Q)
+
+    # Boucle principale d'insertion tant qu'il reste des points à insérer
     while L != []:
+        # trouver le couple (Q_i, Q_j) minimisant la distance
         Q_i, Q_j = trouver_couple_min(L, c, D)
+        # insérer Q_i dans le cycle c et mettre à jour la longueur
         c, l = inserer_dans_cycle(c, Q_i, Q_j, D, l)
+        # retirer Q_i de L
         L.remove(Q_i)
+
     return c, l
 \end{lstlisting}
 
@@ -367,18 +385,26 @@ def decroise(c, D):
     Returns:
         tuple: (c, l) cycle optimisé et sa nouvelle longueur
     """
+    # taille du cycle
     n = len(c)
     amelioration = True
+    # Boucle jusqu'à ce qu'il n'y ait plus d'amélioration
     while amelioration:
         amelioration = False
+        # Parcourir toutes les paires d'arêtes non adjacentes
         for i in range(n - 2):
+            # j doit être au moins i+2 pour éviter les arêtes adjacentes
             for j in range(i + 2, n):
+                # u et v sont les extrémités de la première arête
                 u = c[i]
                 v = c[i + 1]
+                # x et y sont les extrémités de la deuxième arête
                 x = c[j]
                 y = c[(j + 1) % n]
+                # calcul des distances actuelles et nouvelles
                 d_act = D[u, v] + D[x, y]
                 d_nouv = D[u, x] + D[v, y]
+                # Si le décroisement améliore la longueur du cycle
                 if d_nouv < d_act:
                     # Inversion de la sous-séquence entre i+1 et j
                     c[i+1:j+1] = c[i+1:j+1][::-1]
@@ -400,7 +426,9 @@ def optppp(D, r0=0):
     Returns:
         tuple: (c, l) cycle optimisé et sa nouvelle longueur
     """
+    # Obtenir le cycle initial via PPP
     c, _ = ppp(D, r0)
+    # Décroisement
     return decroise(c, D)
 \end{lstlisting}
 
@@ -610,8 +638,11 @@ class GraphePrim:
         Args:
             i (int): Indice de l'élément à faire remonter.
         """
+        # Remonter tant que l'élément a une priorité inférieure à son parent
         while i > 0 and self.priorite(i) < self.priorite((i - 1) // 2):
+            # Échanger avec le parent
             self.echanger(i, (i - 1) // 2)
+            # Mettre à jour l'indice pour continuer à remonter
             i = (i - 1) // 2
 
     def versLeBas(self, i):
@@ -620,14 +651,23 @@ class GraphePrim:
         Args:
             i (int): Indice de l'élément à faire descendre.
         """
+        # Indice du fils gauche
         s = 2 * i + 1
+        # Descendre tant que l'élément a une priorité supérieure à l'un de ses enfants
         while s < len(self.tas):
+            # Trouver l'enfant avec la plus petite priorité en comparant les deux fils et si c'est le droit
             if s + 1 < len(self.tas) and self.priorite(s + 1) < self.priorite(s):
+                # Prendre le fils droit
                 s += 1
+            # Si l'élément courant a une priorité supérieure à son enfant
             if self.priorite(i) > self.priorite(s):
+                # echanger et continuer à descendre
                 self.echanger(i, s)
+                # Mettre à jour l'indice courant de l'elément à descendre
                 i = s
+                # Mettre à jour l'indice avec le fils gauche
                 s = 2 * i + 1
+            # Sinon, la propriété de tas est respectée
             else:
                 break
 
@@ -649,20 +689,29 @@ def prim(D, r0=0):
     # Placer r0 à la racine du tas
     graphe.echanger(0, graphe.noeudTas[r0])
 
+    # Boucle principale de Prim
     while len(graphe.tas) > 0:
+        # Extraire le sommet u de clé minimale
         u = graphe.tas[0]
+        # Marquer u comme inclus dans l'arbre
         pres[u] = False
         
+        # Retirer u du tas
         graphe.echanger(0, len(graphe.tas) - 1)
         graphe.tas.pop()
         
+        # Reajuster le tas
         if len(graphe.tas) > 0:
             graphe.versLeBas(0)
 
+        # Mettre à jour les clés et prédécesseurs des sommets adjacents
         for v in range(n):
+            # Si v est encore dans le tas et l'arête (u, v) est plus petite que la clé actuelle
             if pres[v] and D[u, v] < graphe.cle[v]:
+                # Mettre à jour la clé et le prédécesseur
                 graphe.cle[v] = D[u, v]
                 graphe.pred[v] = u
+                # Faire remonter v dans le tas
                 graphe.versLeHaut(graphe.noeudTas[v])
         
     return graphe.pred
@@ -677,13 +726,19 @@ def pred_to_tree(pred):
     """
     d = {}
     racine = -1
+    # Initialisation du dictionnaire d'adjacence
     for i in range(len(pred)):
+        # Chaque nœud a une liste vide au départ
         d[i] = []
+        # Trouver la racine
         if pred[i] is None or pred[i] == -1:
             racine = i
 
+    # Remplir le dictionnaire d'adjacence
     for i in range(len(pred)):
+        # Ajouter i comme enfant de son prédécesseur
         if pred[i] is not None and pred[i] != -1:
+            # Ajouter i à la liste des enfants de pred[i]
             d[pred[i]].append(i)
 
     return d, racine
@@ -698,27 +753,43 @@ def parcours_prefixe(d, racine):
     Returns:
         list: Liste des sommets dans l'ordre du parcours préfixe.
     """
+    # Initialisation de la pile avec la racine
     stack = [racine]
+    # Marquage des sommets visités en lui attribuant l'ordre de visite
     p = [0] * len(d)
+    # Liste du parcours préfixe
     p_etoile = [racine]
+    # Marquer la racine comme visitée
     p[racine] = 1
     count = 2
+
+    # Parcours prefixe
     while len(stack) > 0 :
+        # Récupérer le sommet au sommet de la pile
         lst_voisin = d[stack[len(stack) -1]]
         rep = False
 
+        # Parcourir les voisins
         for i in range(len(lst_voisin)):
+            # voisin courant de i
             voisin = lst_voisin[i]
+            # Si le voisin n'a pas été visité
             if p[voisin] ==0 :
+                # L'ajouter à la pile
                 stack.append(voisin)
+                # L'ajouter au parcours préfixe
                 p_etoile.append(voisin)
+                # Marquer comme visité en lui attribuant l'ordre de visite
                 p[voisin] = count
                 count +=1
+                # Indiquer qu'on a trouvé un voisin non visité
                 rep = True
                 break
 
+        # Si aucun voisin non visité n'a été trouvé, dépiler
         if not rep :
             stack.pop()
+
     return p_etoile
 
 def optPrim(D, r0=0):
@@ -730,8 +801,11 @@ def optPrim(D, r0=0):
     Returns:
         tuple: (c, l) cycle hamiltonien (liste d'indices), longueur du cycle
     """
+    # Obtenir l'arbre couvrant minimal via Prim
     pred = prim(D, r0)
+    # Convertir les prédécesseurs en arbre
     d, racine = pred_to_tree(pred)
+    # Obtenir le cycle via un parcours préfixe de l'arbre
     c = parcours_prefixe(d, racine)
 
     # Calcul de la longueur totale du cycle
@@ -741,6 +815,7 @@ def optPrim(D, r0=0):
         l += D[c[k], c[(k + 1) % n]]
 
     return c, l
+
 \end{lstlisting}
 
 \subsection{OptPrim + Décroisé (OptOptPrim)}
@@ -782,15 +857,297 @@ def optOptPrim(D, r0=0):
     Returns:
         tuple: (c, l) cycle hamiltonien optimisé, longueur du cycle
     """
-    # Étape 1: Obtenir le cycle initial via Prim + Parcours Préfixe
+    # Obtenir le cycle initial via Prim + Parcours Préfixe
     c_init, _ = optPrim(D, r0)
-
-    # Étape 2: Optimiser ce cycle avec décroisement
+    # Décroisement
     return decroise(c_init, D)
 \end{lstlisting}
 
-\subsection{Évaluation et séparation progressive ("branch and bound") (HDS) pas fait }
+\subsection{Évaluation et séparation progressive ("branch and bound") (HDS)}
 
-\textit{Section à compléter.}
+\begin{tcolorbox}[colback=darkWhite!75!white,colframe=black!30,left=5pt,right=5pt,top=5pt,bottom=5pt]
+\textbf{Structure de données : Noeud}
+
+\textbf{Type} Noeud = \textbf{Enregistrement} \\
+\quad chemin : Liste d'Entiers; \\
+\quad cout\_actuel : Réel; \\
+\quad dernier : Entier; \\
+\quad borne : Réel \\
+\textbf{Fin};
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=darkWhite!75!white,colframe=black!30,left=5pt,right=5pt,top=5pt,bottom=5pt]
+\textbf{Structure de données : Tas}
+
+\textbf{Type} Tas = \textbf{Enregistrement} \\
+\quad tas : Liste de Noeuds \\
+\textbf{Fin};
+\end{tcolorbox}
+
+\vspace{5mm}
+
+\begin{tcolorbox}[colback=darkWhite!75!white,colframe=black!30,left=5pt,right=5pt,top=5pt,bottom=5pt]
+\textbf{Algorithme : CalcBorne} \\
+\textbf{Description :} Calcule une borne inférieure du coût total pour un nœud donné. \\
+\textbf{Vars :}
+\begin{itemize}
+    \item $somme$ : Réel
+    \item $debut, fin$ : Entiers (Extrémités du chemin partiel)
+\end{itemize}
+\textbf{Entrées :}
+\begin{itemize}
+    \item $noeud$ : Structure Noeud
+    \item $D$ : Matrice des distances
+\end{itemize}
+\textbf{Sorties :} $borne$ (Réel) \\
+\textbf{Début :}
+\begin{enumerate}
+    \item $somme \leftarrow 0$
+    \item $debut \leftarrow noeud.chemin[1]$
+    \item $fin \leftarrow noeud.chemin[\text{dernier}]$
+    \item Pour chaque sommet $i$ du graphe faire :
+    \item \quad Si $i$ est interne au chemin alors :
+    \item \quad \quad Ajouter à $somme$ les distances vers ses deux voisins dans le chemin
+    \item \quad Sinon si $i$ est une extrémité ($debut$ ou $fin$) alors :
+    \item \quad \quad Ajouter à $somme$ la distance vers son voisin dans le chemin
+    \item \quad \quad Ajouter à $somme$ la distance minimale vers un sommet non connecté à $i$ dans le chemin
+    \item \quad Sinon ($i$ hors du chemin) :
+    \item \quad \quad Ajouter à $somme$ les deux plus petites distances incidentes à $i$
+    \item Retourner $somme / 2$
+\end{enumerate}
+\end{tcolorbox}
+
+\vspace{5mm}
+
+\begin{tcolorbox}[colback=darkWhite!75!white,colframe=black!30,left=5pt,right=5pt,top=5pt,bottom=5pt]
+\textbf{Algorithme : HDS (Branch and Bound)} \\
+\textbf{Description :} Recherche le cycle hamiltonien de coût minimal en explorant l'espace des solutions à l'aide d'un arbre de recherche et d'une fonction d'évaluation (borne). \\
+\textbf{Vars :}
+\begin{itemize}
+    \item $tas$ : Structure Tas
+    \item $noeud\_courant, nouveau\_noeud$ : Structure Noeud
+    \item $c$ : Liste d'entiers (Meilleur cycle)
+    \item $l$ : Réel (Meilleur coût)
+    \item $cout\_total$ : Réel
+\end{itemize}
+\textbf{Entrées :}
+\begin{itemize}
+    \item $D$ : Matrice des distances
+\end{itemize}
+\textbf{Sorties :} $c, l$ \\
+\textbf{Début :}
+\begin{enumerate}
+    \item $c \leftarrow []$, $l \leftarrow \infty$
+    \item $tas \leftarrow \text{NouveauTas}()$
+    \item $tas.\text{insere}(\text{NouveauNoeud}([0], 0, D))$
+    \item Tant que $tas$ n'est pas vide faire :
+    \item \quad $noeud\_courant \leftarrow tas.\text{extraire\_min}()$
+    \item \quad Si $noeud\_courant.borne \geq l$ alors :
+    \item \quad \quad Continuer (élagage)
+    \item \quad Si $\text{taille}(noeud\_courant.chemin) == n$ alors :
+    \item \quad \quad $cout\_total \leftarrow noeud\_courant.cout\_actuel + D[noeud\_courant.dernier, noeud\_courant.chemin[1]]$
+    \item \quad \quad Si $cout\_total < l$ alors :
+    \item \quad \quad \quad $l \leftarrow cout\_total$
+    \item \quad \quad \quad $c \leftarrow noeud\_courant.chemin + [noeud\_courant.chemin[1]]$
+    \item \quad Sinon :
+    \item \quad \quad Pour chaque sommet $i$ non dans $noeud\_courant.chemin$ faire :
+    \item \quad \quad \quad Créer $nouveau\_noeud$ en ajoutant $i$ au chemin
+    \item \quad \quad \quad $tas.\text{insere}(nouveau\_noeud)$
+    \item Retourner $c, l$
+\end{enumerate}
+\end{tcolorbox}
+
+\begin{lstlisting}[language=Python, caption=Implémentation de HDS]
+class Noeud:
+    def __init__(self, chemin, cout_actuel, D):
+        self.chemin = chemin
+        self.cout_actuel = cout_actuel
+        self.dernier = chemin[-1]
+
+        self.borne = self.calc_borne(D)
+
+    def calc_borne(self, D):
+        """
+        Calcule une borne inférieure du coût total pour le noeud courant. (demi somme)
+        Args:
+            D (np.ndarray): Matrice des distances
+        Returns:
+            float: Borne inférieure du coût total (demi somme)
+        """
+        n = len(D)
+        some = 0.0
+        debut = self.chemin[0]
+        fin = self.chemin[-1]
+
+        for i in range(n):
+            # Cas 1 : Le sommet est déja completement dans le chemin : A->B->i->C->D
+            if i in self.chemin and not i == debut and not i == fin:
+                idx = self.chemin.index(i)
+                # prendre les deux points adjacents dans le chemin
+                some += D[self.chemin[idx - 1], i] + D[i, self.chemin[idx + 1]]
+
+            # Cas 2 : Une extrémité du chemin n'est pas dans le chemin : i->B->C->D ou A->B->C->i
+            elif (i == debut or i == fin) and len(self.chemin) > 1:
+                # prendre le point adjacent qui est dans le chemin
+                if i == debut:
+                    some += D[i, self.chemin[1]]
+                else:
+                    some += D[self.chemin[-2], i]
+                # trouve le minimum parmi les autres
+                min_val = float('inf')
+                for j in range(n):
+                    if min_val > D[i, j] and not i == j:
+                        if i == debut and j != self.chemin[1]:
+                            min_val = D[i, j]
+                        elif i == fin and j != self.chemin[-2]:
+                            min_val = D[i, j]
+                some += min_val
+
+            # Cas 3 : i non dans le chemin : A->B->C->D     Z
+            else:
+                sorted_indices = np.argsort(D[i])
+                # sorted_indices[0] est i (dist 0), on prend [1] et [2]
+                some += D[i, sorted_indices[1]] + D[i, sorted_indices[2]]
+
+        borne = some / 2.0
+        return borne
+
+    def __lt__(self, other):
+        return self.borne < other.borne
+
+class Tas:
+    def __init__(self):
+        self.tas = []
+
+    def __versLeHaut(self, i):
+        """
+        Fait remonter un élément dans le tas pour respecter la propriété de tas min.
+        Args:
+            i (int): Indice de l'élément à faire remonter.
+        """
+        # Remonter tant que l'élément a une priorité inférieure à son parent
+        while i > 0 and self.priorite(i) < self.priorite((i - 1) // 2):
+            # Échanger avec le parent
+            self.echanger(i, (i - 1) // 2)
+            # Mettre à jour l'indice pour continuer à remonter
+            i = (i - 1) // 2
+
+    def __versLeBas(self, i):
+        """
+        Fait descendre un élément dans le tas pour respecter la propriété de tas min.
+        Args:
+            i (int): Indice de l'élément à faire descendre.
+        """
+        # Indice du fils gauche
+        s = 2 * i + 1
+        # Descendre tant que l'élément a une priorité supérieure à l'un de ses enfants
+        while s < len(self.tas):
+            # Trouver l'enfant avec la plus petite priorité en comparant les deux fils et si c'est le droit
+            if s + 1 < len(self.tas) and self.priorite(s + 1) < self.priorite(s):
+                # Prendre le fils droit
+                s += 1
+            # Si l'élément courant a une priorité supérieure à son enfant
+            if self.priorite(i) > self.priorite(s):
+                # echanger et continuer à descendre
+                self.echanger(i, s)
+                # Mettre à jour l'indice courant de l'elément à descendre
+                i = s
+                # Mettre à jour l'indice avec le fils gauche
+                s = 2 * i + 1
+            # Sinon, la propriété de tas est respectée
+            else:
+                break
+
+    def insere(self, elem):
+        """
+        Insère un nouvel élément dans le tas et rétablit la propriété de tas min.
+
+        Args:
+            elem: L'élément à insérer.
+        """
+        self.tas.append(elem)
+        self.__versLeHaut(len(self.tas) - 1)
+
+    def extraire_min(self):
+        """
+        Extrait et retourne l'élément de priorité minimale (la racine du tas).
+        Réorganise le tas après l'extraction.
+
+        Returns:
+            L'élément minimal, ou None si le tas est vide.
+        """
+        if len(self.tas) == 0:
+            return None
+        # Extraire le minimum (racine)
+        min_noeud = self.tas[0]
+        # Remplacer la racine par le dernier élément
+        self.tas[0] = self.tas[-1]
+        self.tas.pop()
+        # Réajuster le tas
+        if len(self.tas) > 0:
+            self.__versLeBas(0)
+        return min_noeud
+    
+    def priorite(self, i):
+        return self.tas[i].borne
+
+    def echanger(self, i, j):
+        self.tas[i], self.tas[j] = self.tas[j], self.tas[i]
+
+def hds(D):
+    """
+    construire un cycle hamiltonien en utilisant la méthode de Branch and Bound (HDS).
+    Args:
+        D (np.ndarray): Matrice des distances.
+    Returns:
+        tuple: (c, l) cycle hamiltonien (liste d'indices), longueur du cycle
+    """
+    c = []
+    l = float('inf')
+    n = len(D)
+
+    if n < 3:
+        if n == 0:
+            return [], 0
+        if n == 1:
+            return [0, 0], 0
+        if n == 2:
+            return [0, 1, 0], D[0, 1] * 2
+
+    tas = Tas()
+    # Initialisation du tas avec le noeud racine
+    noeud_racine = Noeud([0], 0.0, D)
+    tas.insere(noeud_racine)
+
+    while True:
+        # Extraire le noeud avec la plus petite borne
+        noeud_courant = tas.extraire_min()
+        if noeud_courant is None:
+            break
+
+        # si la borne théorique est supérieure à la meilleure solution trouvée, on ignore ce noeud
+        if noeud_courant.borne >= l:
+            continue
+
+        # Si le chemin est complet
+        if len(noeud_courant.chemin) == n:
+            # Ajouter le coût de retour au point de départ
+            cout_total = noeud_courant.cout_actuel + D[noeud_courant.dernier, noeud_courant.chemin[0]]
+            # Si ce coût est inférieur à la meilleure solution trouvée
+            if cout_total < l:
+                l = cout_total
+                c = noeud_courant.chemin + [noeud_courant.chemin[0]]
+        else:
+            # Générer les successeurs possibles
+            for i in range(n):
+                if i not in noeud_courant.chemin:
+                    nouveau_chemin = noeud_courant.chemin + [i]
+                    nouveau_cout = noeud_courant.cout_actuel + D[noeud_courant.dernier, i]
+                    nouveau_noeud = Noeud(nouveau_chemin, nouveau_cout, D)
+                    # Insérer le nouveau noeud dans le tas
+                    tas.insere(nouveau_noeud)
+                    
+    return c, l
+\end{lstlisting}
 
 \end{document}
