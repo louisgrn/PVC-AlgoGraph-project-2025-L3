@@ -20,7 +20,7 @@ def generer_points(n):
 
     # Liste de tuples (x, y)
     points = [(float(p[0]), float(p[1])) for p in points_array]
-    
+
     return points
 
 def lire_points_fichier(chemin_fichier):
@@ -491,3 +491,183 @@ def optOptPrim(D, r0=0):
     c_init, _ = optPrim(D, r0)
     # Décroisement
     return decroise(c_init, D)
+
+#%% HDS
+
+class Noeud:
+    def __init__(self, chemin, cout_actuel, D):
+        self.chemin = chemin
+        self.cout_actuel = cout_actuel
+        self.dernier = chemin[-1]
+
+        self.borne = self.calc_borne(D)
+
+    def calc_borne(self, D):
+        """
+        Calcule une borne inférieure du coût total pour le noeud courant. (demi somme)
+        Args:
+            D (np.ndarray): Matrice des distances
+        Returns:
+            float: Borne inférieure du coût total (demi somme)
+        """
+        n = len(D)
+        some = 0.0
+        debut = self.chemin[0]
+        fin = self.chemin[-1]
+
+        for i in range(n):
+            # Cas 1 : Le sommet est déja completement dans le chemin : A->B->i->C->D
+            if i in self.chemin and not i == debut and not i == fin:
+                idx = self.chemin.index(i)
+                # prendre les deux points adjacents dans le chemin
+                some += D[self.chemin[idx - 1], i] + D[i, self.chemin[idx + 1]]
+
+            # Cas 2 : Une extrémité du chemin n'est pas dans le chemin : i->B->C->D ou A->B->C->i
+            elif (i == debut or i == fin) and len(self.chemin) > 1:
+                # prendre le point adjacent qui est dans le chemin
+                if i == debut:
+                    some += D[i, self.chemin[1]]
+                else:
+                    some += D[self.chemin[-2], i]
+                # trouve le minimum parmi les autres
+                min_val = float('inf')
+                for j in range(n):
+                    if min_val > D[i, j] and not i == j:
+                        if i == debut and j != self.chemin[1]:
+                            min_val = D[i, j]
+                        elif i == fin and j != self.chemin[-2]:
+                            min_val = D[i, j]
+                some += min_val
+
+            # Cas 3 : i non dans le chemin : A->B->C->D     Z
+            else:
+                sorted_indices = np.argsort(D[i])
+                # sorted_indices[0] est i (dist 0), on prend [1] et [2]
+                some += D[i, sorted_indices[1]] + D[i, sorted_indices[2]]
+
+        borne = some / 2.0
+        return borne
+
+    def __lt__(self, other):
+        return self.borne < other.borne
+
+class Tas:
+    def __init__(self):
+        self.tas = []
+
+    def __versLeHaut(self, i):
+        """
+        Fait remonter un élément dans le tas pour respecter la propriété de tas min.
+        Args:
+            i (int): Indice de l'élément à faire remonter.
+        """
+        # Remonter tant que l'élément a une priorité inférieure à son parent
+        while i > 0 and self.priorite(i) < self.priorite((i - 1) // 2):
+            # Échanger avec le parent
+            self.echanger(i, (i - 1) // 2)
+            # Mettre à jour l'indice pour continuer à remonter
+            i = (i - 1) // 2
+
+    def __versLeBas(self, i):
+        """
+        Fait descendre un élément dans le tas pour respecter la propriété de tas min.
+        Args:
+            i (int): Indice de l'élément à faire descendre.
+        """
+        # Indice du fils gauche
+        s = 2 * i + 1
+        # Descendre tant que l'élément a une priorité supérieure à l'un de ses enfants
+        while s < len(self.tas):
+            # Trouver l'enfant avec la plus petite priorité en comparant les deux fils et si c'est le droit
+            if s + 1 < len(self.tas) and self.priorite(s + 1) < self.priorite(s):
+                # Prendre le fils droit
+                s += 1
+            # Si l'élément courant a une priorité supérieure à son enfant
+            if self.priorite(i) > self.priorite(s):
+                # echanger et continuer à descendre
+                self.echanger(i, s)
+                # Mettre à jour l'indice courant de l'elément à descendre
+                i = s
+                # Mettre à jour l'indice avec le fils gauche
+                s = 2 * i + 1
+            # Sinon, la propriété de tas est respectée
+            else:
+                break
+
+    def insere(self, elem):
+        """
+        Insère un nouvel élément dans le tas et rétablit la propriété de tas min.
+
+        Args:
+            elem: L'élément à insérer.
+        """
+        self.tas.append(elem)
+        self.__versLeHaut(len(self.tas) - 1)
+
+    def extraire_min(self):
+        """
+        Extrait et retourne l'élément de priorité minimale (la racine du tas).
+        Réorganise le tas après l'extraction.
+
+        Returns:
+            L'élément minimal, ou None si le tas est vide.
+        """
+        if len(self.tas) == 0:
+            return None
+        # Extraire le minimum (racine)
+        min_noeud = self.tas[0]
+        # Remplacer la racine par le dernier élément
+        self.tas[0] = self.tas[-1]
+        self.tas.pop()
+        # Réajuster le tas
+        if len(self.tas) > 0:
+            self.__versLeBas(0)
+        return min_noeud
+    
+
+def hds(D):
+    """
+    construire un cycle hamiltonien en utilisant la méthode de Branch and Bound (HDS).
+    Args:
+        D (np.ndarray): Matrice des distances.
+    Returns:
+        tuple: (c, l) cycle hamiltonien (liste d'indices), longueur du cycle
+    """
+    c = []
+    l = float('inf')
+    n = len(D)
+
+    tas = Tas()
+    # Initialisation du tas avec le noeud racine
+    noeud_racine = Noeud([0], 0.0, D)
+    tas.insere(noeud_racine)
+
+    while True:
+        # Extraire le noeud avec la plus petite borne
+        noeud_courant = tas.extraire_min()
+        if noeud_courant is None:
+            break
+
+        # si la borne théorique est supérieure à la meilleure solution trouvée, on ignore ce noeud
+        if noeud_courant.borne >= l:
+            continue
+
+        # Si le chemin est complet
+        if len(noeud_courant.chemin) == n:
+            # Ajouter le coût de retour au point de départ
+            cout_total = noeud_courant.cout_actuel + D[noeud_courant.dernier, noeud_courant.chemin[0]]
+            # Si ce coût est inférieur à la meilleure solution trouvée
+            if cout_total < l:
+                l = cout_total
+                c = noeud_courant.chemin + [noeud_courant.chemin[0]]
+        else:
+            # Générer les successeurs possibles
+            for i in range(n):
+                if i not in noeud_courant.chemin:
+                    nouveau_chemin = noeud_courant.chemin + [i]
+                    nouveau_cout = noeud_courant.cout_actuel + D[noeud_courant.dernier, i]
+                    nouveau_noeud = Noeud(nouveau_chemin, nouveau_cout, D)
+                    # Insérer le nouveau noeud dans le tas
+                    tas.insere(nouveau_noeud)
+                    
+    return c, l
