@@ -177,10 +177,15 @@ def plot_average_length(result, labels, path=None):
 
 
 if __name__ == "__main__":
-    number_of_tests = 10
+    number_of_tests = 30
     number_of_sommet = 10
     list_func = [pvc.ppp, pvc.optppp, pvc.optPrim, pvc.optOptPrim, pvc.hds]
     labels = ["PPP", "OptPPP", "OptPrim", "OptOptPrim", "HDS"]
+
+    if number_of_sommet > 12 or number_of_tests > 12:
+        list_func.remove(pvc.hds)
+        print("\nATTENTION : HDS a été désactivé. Le nombre de sommets miximum pour son éxécution est fixé à 12 pour éviter des temps de calcul excessifs.")
+
     spinner = Spinner("Execution en cours...", delay=0.1)
     try:
         spinner.start()
@@ -201,7 +206,10 @@ if __name__ == "__main__":
 
     print(f"\nOptPPP vs PPP: {pct_optppp_vs_ppp:+.2f}%")
     print(f"OptPrim vs OptPPP: {pct_optprim_vs_optppp:+.2f}%")
-    plot_execution_times_and_lengths(results_1_n, labels)
-    plot_average_time(results, labels)
-    plot_average_length(results, labels)
+    
+    # Sauvegarde des graphiques dans le dossier img
+    plot_execution_times_and_lengths(results_1_n, labels, path="img/execution_times_and_lengths.png")
+    plot_average_time(results, labels, path="img/average_time.png")
+    plot_average_length(results, labels, path="img/average_length.png")
+    print("\nGraphiques sauvegardés dans le dossier 'img/'")
 
