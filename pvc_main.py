@@ -10,7 +10,6 @@ import itertools
 import pvc_lib as pvc
 
 # Copier coller d'un site pour l'effet visuel dans la console
-
 class Spinner:
     """Simple console spinner that runs on a separate thread."""
     def __init__(self, message="Execution en cours", delay=0.1):
@@ -38,25 +37,7 @@ class Spinner:
     def stop(self):
         self._stop.set()
         self._thread.join()
-
-
-# def generer_points(n):
-#   """
-#   Génère n points avec des coordonnées tirées aléatoirement dans l'intervalle
-#   [0, 1].
-
-#   Args:
-#       n (int): Le nombre de points à générer.
-
-#   Returns:
-#       list: Une liste de tuples (x, y).
-#   """
-#   # Matrice n x 2 avec des valeurs entre 0 et 1
-#   points_array = rd.rand(n, 2)
-
-#   # Liste de tuples (x, y)
-#   points = [(float(p[0]), float(p[1])) for p in points_array]
-#   return points
+# ---------------------------------------------------------------------------- #
 
 def exec_func(args):
     test_data, function = args
@@ -177,8 +158,28 @@ def plot_average_length(result, labels, path=None):
 
 
 if __name__ == "__main__":
+
+
+
+    
+    # ------------------------------------------------------------------
+    # ------------------------------------------------------------------
+    # ------------------------------------------------------------------
+    # VALEUR A MODIFIER POUR LE NOMBRE DE TESTS ET LE NOMBRE DE SOMMETS
+    # ------------------------------------------------------------------
+    # ------------------------------------------------------------------
+    # ------------------------------------------------------------------
     number_of_tests = 30
     number_of_sommet = 10
+    # ------------------------------------------------------------------
+    # ------------------------------------------------------------------
+    # ------------------------------------------------------------------
+    # ------------------------------------------------------------------
+
+
+
+
+
     list_func = [pvc.ppp, pvc.optppp, pvc.optPrim, pvc.optOptPrim, pvc.hds]
     labels = ["PPP", "OptPPP", "OptPrim", "OptOptPrim", "HDS"]
 
