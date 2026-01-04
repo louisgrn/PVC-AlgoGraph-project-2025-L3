@@ -95,18 +95,47 @@ black, citecolor = cyan, linktoc = all]{hyperref}
 
 \section{Notice d'utilisation}
 
-Ce projet dépend des bibliothèques \texttt{numpy} et d'autres modules standards.
-Il dépend aussi de \texttt{flask} pour l'application web.
+Ce projet dépend des bibliothèques \texttt{numpy} et \texttt{matplotlib} ainsi que d'autres modules standards.
+Il dépend aussi du module \texttt{flask} pour l'application web.
 
-\begin{lstlisting}[caption=Installation des dépendances]
-pip install numpy # (tout)
-pip install flask # (web app)
+\begin{lstlisting}
+pip install numpy # (utilisé partout)
+pip install matplotlib # (utilisé partout)
+pip install python-dotenv # (pour web app)
+pip install flask # (pour web app)
 \end{lstlisting}
-
 Ou plus simplement :
 
 \begin{lstlisting}
-pip install requirement.txt
+pip install -r requirement.txt
+\end{lstlisting}
+
+Pour lancé le programme en ligne de commande et tester les algorithme, utilisé :
+\begin{lstlisting}
+python3 pvc_main.py
+\end{lstlisting}
+ou lancer l'éxécution de la cellule sous pizo. Les valeur suivante sont modifiable pour tester de manière différente les algorithme implémenté. 
+\begin{lstlisting}
+number_of_tests = 30
+number_of_sommet = 10
+\end{lstlisting}
+Il est possible de consulter les graphique générer dans le dossier \texttt{/img}
+
+Les algorithmes implémentés sont disponible dans le fichier \texttt{pvc\_algos.py}. Ils sont chqacun disposé dans une cellule Pyzo distincte pour une meilleure lisibilité. Ces algorithmes sont détaillés dans la section suivante et leur code et aussi donné comme demandé dans le sujet du projet.
+
+L'application web est lancée via le fichier \texttt{app.py}. Il est possible de configurer les valeurs maximal des sommets et des temps de "timeout" grace au fichier \texttt{.env} à la racine du projet avec les variables d'environement suivantes :
+\begin{lstlisting}
+MAX_RANDOM_POINTS=1000
+GLOBAL_TIMEOUT=30 #seconds
+SECRET_KEY=your-secret-key-here-change-in-production
+
+# Stats page limits
+MAX_STATS_TESTS=100
+MAX_STATS_VERTICES=200
+\end{lstlisting}
+Le serveur web peut être lancé avec la commande :
+\begin{lstlisting}
+python3 app.py
 \end{lstlisting}
 
 \section{Algorithme}
