@@ -54,7 +54,7 @@ black, citecolor = cyan, linktoc = all]{hyperref}
 
 \newcommand{\code}{\commandbox}
 
-\title{Rapport projet d'Algorithmie des graphes \\ \large Résolution du problème du voyageur de commerce}
+\title{Rapport projet d'Algorithmique des graphes \\ \large Résolution du problème du voyageur de commerce}
 \author{Tristan GROULT, Louis GUERAIN, Kibandou BIGNANG}
 \date{\today}
 
@@ -110,20 +110,20 @@ Ou plus simplement :
 pip install -r requirement.txt
 \end{lstlisting}
 
-Pour lancé le programme en ligne de commande et tester les algorithme, utilisé :
+Pour lancer le programme en ligne de commande et tester les algorithmes, utilisez :
 \begin{lstlisting}
 python3 pvc_main.py
 \end{lstlisting}
-ou lancer l'éxécution de la cellule sous pizo. Les valeur suivante sont modifiable pour tester de manière différente les algorithme implémenté. 
+ou lancer l'exécution de la cellule sous Pyzo. Les valeurs suivantes sont modifiables pour tester de manière différente les algorithmes implémentés. 
 \begin{lstlisting}
 number_of_tests = 30
 number_of_sommet = 10
 \end{lstlisting}
-Il est possible de consulter les graphique générer dans le dossier \texttt{/img}
+Il est possible de consulter les graphiques générés dans le dossier \texttt{/img}
 
-Les algorithmes implémentés sont disponible dans le fichier \texttt{pvc\_algos.py}. Ils sont chqacun disposé dans une cellule Pyzo distincte pour une meilleure lisibilité. Ces algorithmes sont détaillés dans la section suivante et leur code et aussi donné comme demandé dans le sujet du projet.
+Les algorithmes implémentés sont disponibles dans le fichier \texttt{pvc\_algos.py}. Ils sont chacun disposés dans une cellule Pyzo distincte pour une meilleure lisibilité. Ces algorithmes sont détaillés dans la section suivante et leur code est aussi donné comme demandé dans le sujet du projet.
 
-L'application web est lancée via le fichier \texttt{app.py}. Il est possible de configurer les valeurs maximal des sommets et des temps de "timeout" grace au fichier \texttt{.env} à la racine du projet avec les variables d'environement suivantes :
+L'application web est lancée via le fichier \texttt{app.py}. Il est possible de configurer les valeurs maximales des sommets et des temps de "timeout" grâce au fichier \texttt{.env} à la racine du projet avec les variables d'environnement suivantes :
 \begin{lstlisting}
 MAX_RANDOM_POINTS=1000
 GLOBAL_TIMEOUT=30 #seconds
@@ -137,6 +137,44 @@ Le serveur web peut être lancé avec la commande :
 \begin{lstlisting}
 python3 app.py
 \end{lstlisting}
+
+\section{Résultats de l'étude statistique}
+
+Nous avons comparé les performances des cinq algorithmes implémentés pour résoudre le problème du voyageur de commerce : PPP, OptPPP, OptPrim, OptOptPrim et HDS. L'étude porte sur le temps d'exécution et la qualité des solutions (longueur du cycle).
+
+\subsection{Complexité théorique}
+
+L'analyse des algorithmes nous permet d'établir les ordres de grandeur suivants pour un graphe de $n$ sommets :
+
+\begin{itemize}
+    \item \textbf{PPP (Point le Plus Proche)} : $O(n^3)$. L'insertion itérative demande de parcourir l'ensemble des points restants à chaque étape.
+    \item \textbf{OptPPP} : Complexité de PPP augmentée par la phase de décroisement (recherche locale).
+    \item \textbf{OptPrim} : $O(n^2 \log n)$. L'utilisation d'un tas binaire pour l'algorithme de Prim permet cette efficacité, suivie d'un parcours préfixe linéaire.
+    \item \textbf{OptOptPrim} : Complexité d'OptPrim augmentée par la phase de décroisement.
+    \item \textbf{HDS (Heuristique Déterministe Séquentielle)} : Algorithme de type \textit{Branch and Bound}. Sa complexité est exponentielle dans le pire des cas, car il explore l'arbre des solutions possibles pour trouver l'optimum exact.
+\end{itemize}
+
+\subsection{Analyse des performances}
+
+\textbf{Vitesse d'exécution :}
+\begin{itemize}
+    \item \textbf{OptPrim} se distingue comme l'algorithme le plus rapide, cohérent avec sa complexité théorique plus faible.
+    \item \textbf{PPP} est sensiblement plus lent que l'approche basée sur Prim.
+    \item L'ajout de l'étape de \textbf{décroisement} (dans OptPPP et OptOptPrim) augmente naturellement le temps de calcul par rapport aux versions de base, mais permet d'affiner la solution.
+    \item \textbf{HDS} est extrêmement coûteux en temps dès que le nombre de sommets augmente, le limitant aux petites instances, contrairement aux autres heuristiques qui passent à l'échelle.
+\end{itemize}
+
+\textbf{Qualité des solutions :}
+\begin{itemize}
+    \item \textbf{HDS} fournit toujours la solution optimale (le cycle le plus court possible), servant de référence absolue.
+    \item Parmi les heuristiques constructives pures, \textbf{PPP} tend à donner de meilleurs résultats initiaux que \textbf{OptPrim}.
+    \item L'application du \textbf{décroisement} est cruciale : elle améliore considérablement la qualité des solutions. \textbf{OptOptPrim} et \textbf{OptPPP} produisent des cycles de longueurs comparables et très compétitifs.
+\end{itemize}
+
+\textbf{Conclusion :}
+L'algorithme \textbf{OptOptPrim} présente souvent le meilleur compromis global : il bénéficie de la rapidité de construction de l'arbre de Prim et de l'efficacité du décroisement pour produire d'excellentes solutions en un temps très court. HDS reste l'outil de choix uniquement lorsque l'exactitude prime sur le temps de calcul pour de petits graphes.
+
+
 
 \section{Algorithme}
 
@@ -153,7 +191,7 @@ python3 app.py
 \end{itemize}
 \textbf{Entrées :}
 \begin{itemize}
-    \item $L$ : Liste de points $P_1, \dots, P_n$
+    \item $L$ : Liste de points $P_1, \dots, P_n$ 
     \item $Q$ : Un point de départ choisi dans $L$
     \item $D$ : La matrice des distances $n \times n$
 \end{itemize}
@@ -461,7 +499,7 @@ def optppp(D, r0=0):
     return decroise(c, D)
 \end{lstlisting}
 
-\subsection{Parcour en largeur d'un ACM à partir de Prim (OptPrim)}
+\subsection{Parcours préfixe d'un ACM à partir de Prim (OptPrim)}
 
 
 \begin{tcolorbox}[colback=darkWhite!75!white,colframe=black!30,left=5pt,right=5pt,top=5pt,bottom=5pt]
@@ -471,7 +509,7 @@ def optppp(D, r0=0):
 \quad cle : Tableau[1..n] de Réel; \\
 \quad pred : Tableau[1..n] d'Entier; \\
 \quad NoeudTas : Tableau[1..n] d'Entier \\
-\quad Tas : Tableau[1..n] d'Entier \\1
+\quad Tas : Tableau[1..n] d'Entier \\
 \textbf{Fin};
 \end{tcolorbox}
 
