@@ -93,6 +93,10 @@ black, citecolor = cyan, linktoc = all]{hyperref}
 
 \clearpage
 
+\section{Interface utilisateur}
+
+Notre interface utilisateur est disponible publiquement à l'adresse suivante : \url{https://graph.grltt.fr}
+
 \section{Notice d'utilisation}
 
 Ce projet dépend des bibliothèques \texttt{numpy} et \texttt{matplotlib} ainsi que d'autres modules standards.
@@ -149,7 +153,7 @@ L'analyse des algorithmes nous permet d'établir les ordres de grandeur suivants
 \begin{itemize}
     \item \textbf{PPP (Point le Plus Proche)} : $O(n^3)$. L'insertion itérative demande de parcourir l'ensemble des points restants à chaque étape.
     \item \textbf{OptPPP} : Complexité de PPP augmentée par la phase de décroisement (recherche locale).
-    \item \textbf{OptPrim} : $O(n^2 \log n)$. L'utilisation d'un tas binaire pour l'algorithme de Prim permet cette efficacité, suivie d'un parcours préfixe linéaire.
+    \item \textbf{OptPrim} : $O(n^2 \log n)$. L'algorithme de Prim est implémenté avec un tas binaire. Sur un graphe complet ($m \approx n^2$ arêtes), le coût des mises à jour des priorités dans le tas domine, donnant une complexité de $O(m \log n)$ soit $O(n^2 \log n)$.
     \item \textbf{OptOptPrim} : Complexité d'OptPrim augmentée par la phase de décroisement.
     \item \textbf{HDS (Heuristique Déterministe Séquentielle)} : Algorithme de type \textit{Branch and Bound}. Sa complexité est exponentielle dans le pire des cas, car il explore l'arbre des solutions possibles pour trouver l'optimum exact.
 \end{itemize}
